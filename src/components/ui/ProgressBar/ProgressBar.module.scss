@@ -1,0 +1,24 @@
+.bar {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border: none;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  appearance: none;
+  background: var(--line-input);
+
+  &::-webkit-progress-bar {
+    background: var(--line-input);
+  }
+
+  &::-webkit-progress-value {
+    background: var(--accent);
+    border-radius: var(--radius-pill);
+  }
+
+  &::-moz-progress-bar {
+    background: var(--accent);
+    border-radius: var(--radius-pill);
+  }
+}

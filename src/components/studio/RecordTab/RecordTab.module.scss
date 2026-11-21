@@ -1,0 +1,57 @@
+@use '@/styles/typography' as type;
+@use '@/styles/breakpoints' as bp;
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.settings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-5);
+  align-items: end;
+
+  @include bp.mobile {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.value {
+  @include type.number;
+  @include type.caption;
+
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.slider {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  @include type.label;
+
+  color: var(--text-secondary);
+}
+
+.hint {
+  @include type.caption;
+
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+}

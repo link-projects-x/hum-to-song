@@ -1,0 +1,27 @@
+@use '@/styles/typography' as type;
+
+.export {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+
+.label {
+  @include type.label;
+
+  color: var(--text-secondary);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.error {
+  @include type.caption;
+
+  flex-basis: 100%;
+  color: var(--warning);
+}

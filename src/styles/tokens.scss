@@ -1,0 +1,54 @@
+:root {
+  --bg: #0f1115;
+  --surface: #171a20;
+  --surface-raised: #20242c;
+  --surface-sunken: #0c0e12;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-input: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.2);
+
+  --text-primary: #f2f3f5;
+  --text-secondary: #b1b6c0;
+  --text-muted: #868c98;
+
+  --accent: #ff8a5c;
+  --accent-hover: #ffa784;
+  --accent-ink: #1b0f0a;
+  --accent-soft: rgba(255, 138, 92, 0.12);
+
+  --warning: #ffb547;
+  --warning-soft: rgba(255, 181, 71, 0.1);
+
+  --roll-bg: #111318;
+  --roll-row-dark: #0d0f13;
+  --roll-line: rgba(255, 255, 255, 0.05);
+  --roll-bar-line: rgba(255, 255, 255, 0.16);
+  --roll-note: #ff8a5c;
+  --roll-note-edge: #ffc2a8;
+  --roll-contour: rgba(130, 200, 255, 0.85);
+  --roll-chord-band: #161920;
+  --roll-chord-text: #e9ebef;
+  --roll-label: #6f7682;
+  --roll-playhead: #f2f3f5;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --control-height: 44px;
+  --control-height-sm: 36px;
+  --page-width: 1040px;
+  --page-padding: 24px;
+  --panel-padding: 20px;
+  --roll-height: 300px;
+  --roll-bar-min: 84px;
+}

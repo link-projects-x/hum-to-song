@@ -1,0 +1,45 @@
+@use '@/styles/typography' as type;
+
+.group {
+  display: inline-grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: var(--space-1);
+  border: 1px solid var(--line-input);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.option {
+  @include type.body;
+
+  min-width: 0;
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-3);
+  overflow: hidden;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover:not(:disabled, .active) {
+    background: var(--surface-raised);
+    color: var(--text-primary);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+}
+
+.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}

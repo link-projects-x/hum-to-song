@@ -1,0 +1,11 @@
+@use '@/styles/typography' as type;
+
+.footer {
+  @include type.caption;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-8) 0;
+  color: var(--text-muted);
+}
