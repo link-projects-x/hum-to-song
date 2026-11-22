@@ -1,0 +1,26 @@
+@use '@/styles/typography' as type;
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 220px;
+  padding: 28px;
+  border: 1.5px dashed var(--line-control);
+  border-radius: var(--radius-xl);
+  text-align: center;
+
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+.text {
+  @include type.text;
+
+  max-width: 340px;
+  color: var(--text-muted);
+}

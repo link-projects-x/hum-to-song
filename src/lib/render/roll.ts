@@ -1,20 +1,28 @@
 import { chordName } from '@/lib/music/chords';
 import { noteName } from '@/lib/music/pitch';
 import type { TChordSpan, TKey, TNote } from '@/types/music';
+import type { TDrum, TDrumHit, TTrackId } from '@/types/song';
 
 export type TRollTheme = {
   background: string;
-  rowDark: string;
   line: string;
+  rowDark: string;
+  beatLine: string;
   barLine: string;
   note: string;
-  noteEdge: string;
-  contour: string;
-  chordBand: string;
+  noteRing: string;
+  hum: string;
+  chords: string;
   chordText: string;
+  bass: string;
+  drums: string;
+  text: string;
   label: string;
+  laneText: string;
   playhead: string;
-  font: string;
+  playheadGlow: string;
+  sans: string;
+  mono: string;
 };
 
 export type TRollData = {
@@ -25,38 +33,85 @@ export type TRollData = {
   beatsPerBar: number;
   contourBeats: Float32Array;
   contourPitches: Float32Array;
+  bass: TNote[];
+  drums: TDrumHit[];
 };
 
 export type TRollLayout = {
   width: number;
   height: number;
   gutter: number;
-  band: number;
+  strip: number;
+  pitch: number;
+  lane: number;
   low: number;
   high: number;
 };
 
-const BLACK_KEYS = new Set([1, 3, 6, 8, 10]);
-const GUTTER = 34;
-const BAND = 26;
+type TLaneId = Extract<TTrackId, 'chords' | 'bass' | 'drums'>;
+
+type TDrumMark = { top: number; size: number; radius: number; alpha: number };
+
+const LANES: { id: TLaneId; label: string }[] = [
+  { id: 'chords', label: 'Chords' },
+  { id: 'bass', label: 'Bass' },
+  { id: 'drums', label: 'Drums' },
+];
+
+const GUTTER = 72;
+const STRIP = 30;
+const PITCH = 260;
+const LANE = 34;
+const MIN_WIDTH = 680;
+const MIN_BAR = 84;
 const MIN_SPAN = 14;
+const LABEL_X = 12;
+const DIMMED = 0.22;
+const HUM_DIMMED = 0.6;
+const BLACK_KEYS = new Set([1, 3, 6, 8, 10]);
+
+const KICK: TDrumMark = { top: 21, size: 9, radius: 4.5, alpha: 1 };
+const CLAP: TDrumMark = { top: 11, size: 7, radius: 2, alpha: 0.85 };
+const HAT: TDrumMark = { top: 3, size: 5, radius: 1, alpha: 0.55 };
+const DRUM_MARKS: Record<TDrum, TDrumMark> = {
+  kick: KICK,
+  snare: CLAP,
+  clap: CLAP,
+  rim: CLAP,
+  hat: HAT,
+  openHat: HAT,
+};
+
+export const rollHeight = () => STRIP + PITCH + LANES.length * LANE;
+
+export const rollWidth = (available: number, bars: number) =>
+  Math.max(available, MIN_WIDTH, GUTTER + bars * MIN_BAR);
+
+export const ROLL_GUTTER = GUTTER;
 
 export function readRollTheme(element: Element): TRollTheme {
   const style = getComputedStyle(element);
   const read = (name: string) => style.getPropertyValue(name).trim();
   return {
     background: read('--roll-bg'),
-    rowDark: read('--roll-row-dark'),
     line: read('--roll-line'),
+    rowDark: read('--roll-row-dark'),
+    beatLine: read('--roll-beat-line'),
     barLine: read('--roll-bar-line'),
-    note: read('--roll-note'),
-    noteEdge: read('--roll-note-edge'),
-    contour: read('--roll-contour'),
-    chordBand: read('--roll-chord-band'),
+    note: read('--track-melody'),
+    noteRing: read('--roll-note-ring'),
+    hum: read('--track-hum'),
+    chords: read('--track-chords'),
     chordText: read('--roll-chord-text'),
-    label: read('--roll-label'),
-    playhead: read('--roll-playhead'),
-    font: read('--font-sans') || 'sans-serif',
+    bass: read('--track-bass'),
+    drums: read('--track-drums'),
+    text: read('--text-primary'),
+    label: read('--text-muted'),
+    laneText: read('--text-secondary'),
+    playhead: read('--text-primary'),
+    playheadGlow: read('--roll-playhead-glow'),
+    sans: read('--font-sans') || 'sans-serif',
+    mono: read('--font-mono') || 'monospace',
   };
 }
 
@@ -87,104 +142,127 @@ export function pitchRange(data: TRollData): [number, number] {
 
 export function rollLayout(data: TRollData, width: number, height: number): TRollLayout {
   const [low, high] = pitchRange(data);
-  return { width, height, gutter: GUTTER, band: BAND, low, high };
+  return { width, height, gutter: GUTTER, strip: STRIP, pitch: PITCH, lane: LANE, low, high };
 }
 
-const beatX = (layout: TRollLayout, data: TRollData, beat: number) =>
-  layout.gutter + (beat / (data.bars * data.beatsPerBar)) * (layout.width - layout.gutter);
+const totalBeats = (data: TRollData) => data.bars * data.beatsPerBar;
 
-const rowHeight = (layout: TRollLayout) =>
-  (layout.height - layout.band) / (layout.high - layout.low + 1);
+const beatX = (layout: TRollLayout, data: TRollData, beat: number) =>
+  layout.gutter + (beat / totalBeats(data)) * (layout.width - layout.gutter);
+
+const rowHeight = (layout: TRollLayout) => layout.pitch / (layout.high - layout.low + 1);
+
+const rowTop = (layout: TRollLayout, midi: number) =>
+  layout.strip + (layout.high - midi) * rowHeight(layout);
 
 const pitchY = (layout: TRollLayout, pitch: number) =>
-  layout.band + (layout.high + 0.5 - pitch) * rowHeight(layout);
+  layout.strip + (layout.high + 0.5 - pitch) * rowHeight(layout);
 
-export function drawRoll(
+const laneTop = (layout: TRollLayout, index: number) =>
+  layout.strip + layout.pitch + index * layout.lane;
+
+function hLine(ctx: CanvasRenderingContext2D, y: number, x0: number, x1: number, color: string) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x0, Math.round(y), x1 - x0, 1);
+}
+
+function vLine(ctx: CanvasRenderingContext2D, x: number, y0: number, y1: number, color: string) {
+  ctx.fillStyle = color;
+  ctx.fillRect(Math.round(x), y0, 1, y1 - y0);
+}
+
+function block(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number
+) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, Math.max(1, w), h, Math.min(r, h / 2, Math.max(1, w) / 2));
+}
+
+function drawPitchArea(
   ctx: CanvasRenderingContext2D,
   data: TRollData,
   layout: TRollLayout,
   theme: TRollTheme
 ) {
-  const { width, height, gutter, band, low, high } = layout;
+  const { width, gutter, low, high } = layout;
   const row = rowHeight(layout);
-  ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = theme.background;
-  ctx.fillRect(0, 0, width, height);
-
   for (let midi = low; midi <= high; midi++) {
-    const top = pitchY(layout, midi) - row / 2;
+    const top = rowTop(layout, midi);
     if (BLACK_KEYS.has(((midi % 12) + 12) % 12)) {
       ctx.fillStyle = theme.rowDark;
       ctx.fillRect(gutter, top, width - gutter, row);
     }
-    if (midi % 12 === 0 && row >= 6) {
+    if (midi % 12 === 0) {
       ctx.fillStyle = theme.label;
-      ctx.font = `600 10px ${theme.font}`;
+      ctx.font = `500 11px ${theme.mono}`;
       ctx.textBaseline = 'middle';
-      ctx.fillText(noteName(midi), 4, top + row / 2);
+      ctx.fillText(noteName(midi), LABEL_X, top + row / 2);
     }
   }
-
-  const totalBeats = data.bars * data.beatsPerBar;
-  for (let beat = 0; beat <= totalBeats; beat++) {
-    const x = Math.round(beatX(layout, data, beat)) + 0.5;
-    ctx.strokeStyle = beat % data.beatsPerBar === 0 ? theme.barLine : theme.line;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x, beat % data.beatsPerBar === 0 ? 0 : band);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
-
-  ctx.fillStyle = theme.chordBand;
-  ctx.fillRect(gutter, 0, width - gutter, band);
-  ctx.font = `700 12px ${theme.font}`;
-  ctx.textBaseline = 'middle';
-  for (const span of data.spans) {
-    const x0 = beatX(layout, data, span.start);
-    const x1 = beatX(layout, data, span.start + span.duration);
-    if (span.start % data.beatsPerBar !== 0) {
-      ctx.strokeStyle = theme.barLine;
-      ctx.beginPath();
-      ctx.moveTo(Math.round(x0) + 0.5, 4);
-      ctx.lineTo(Math.round(x0) + 0.5, band - 4);
-      ctx.stroke();
+  const bottom = layout.strip + layout.pitch;
+  for (let beat = 1; beat < totalBeats(data); beat++) {
+    if (beat % data.beatsPerBar !== 0) {
+      vLine(ctx, beatX(layout, data, beat), layout.strip, bottom, theme.beatLine);
     }
-    const label = chordName(span.chord, data.key);
-    const fits = ctx.measureText(label).width + 10 <= x1 - x0;
-    ctx.fillStyle = theme.chordText;
-    if (fits) ctx.fillText(label, x0 + 6, band / 2);
   }
+}
 
+function drawNotes(
+  ctx: CanvasRenderingContext2D,
+  data: TRollData,
+  layout: TRollLayout,
+  theme: TRollTheme
+) {
+  const row = rowHeight(layout);
+  const h = Math.max(4, row * 0.6);
   for (const note of data.notes) {
-    if (note.midi < low || note.midi > high) continue;
+    if (note.midi < layout.low || note.midi > layout.high) continue;
     const x0 = beatX(layout, data, note.start) + 1;
-    const x1 = beatX(layout, data, note.start + note.duration) - 1;
-    const y = pitchY(layout, note.midi) - row / 2 + 1;
-    const h = Math.max(2, row - 2);
-    ctx.fillStyle = theme.note;
-    ctx.beginPath();
-    ctx.roundRect(x0, y, Math.max(2, x1 - x0), h, Math.min(4, h / 2));
+    const x1 = beatX(layout, data, note.start + note.duration) - 2;
+    const y = rowTop(layout, note.midi) + (row - h) / 2;
+    ctx.fillStyle = theme.noteRing;
+    block(ctx, x0 - 1, y - 1, x1 - x0 + 2, h + 2, 5);
     ctx.fill();
-    ctx.fillStyle = theme.noteEdge;
-    ctx.fillRect(x0, y, 2, h);
+    ctx.fillStyle = theme.note;
+    block(ctx, x0, y, x1 - x0, h, 4);
+    ctx.fill();
   }
+}
 
-  ctx.strokeStyle = theme.contour;
-  ctx.lineWidth = 1.25;
+function drawContour(
+  ctx: CanvasRenderingContext2D,
+  data: TRollData,
+  layout: TRollLayout,
+  theme: TRollTheme,
+  alpha: number
+) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(layout.gutter, layout.strip, layout.width - layout.gutter, layout.pitch);
+  ctx.clip();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = theme.hum;
+  ctx.lineWidth = 2;
   ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
   ctx.beginPath();
   let drawing = false;
   let lastBeat = -Infinity;
+  const total = totalBeats(data);
   for (let i = 0; i < data.contourPitches.length; i++) {
     const pitch = data.contourPitches[i];
     const beat = data.contourBeats[i];
     const visible =
       Number.isFinite(pitch) &&
       beat >= 0 &&
-      beat <= totalBeats &&
-      pitch >= low - 0.5 &&
-      pitch <= high + 0.5;
+      beat <= total &&
+      pitch >= layout.low - 0.5 &&
+      pitch <= layout.high + 0.5;
     if (!visible) {
       drawing = false;
       continue;
@@ -197,6 +275,175 @@ export function drawRoll(
     lastBeat = beat;
   }
   ctx.stroke();
+  ctx.restore();
+}
+
+function drawChordNames(
+  ctx: CanvasRenderingContext2D,
+  data: TRollData,
+  layout: TRollLayout,
+  theme: TRollTheme
+) {
+  ctx.font = `600 12px ${theme.mono}`;
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = theme.text;
+  for (const span of data.spans) {
+    const x0 = beatX(layout, data, span.start);
+    const x1 = beatX(layout, data, span.start + span.duration);
+    const label = chordName(span.chord, data.key);
+    if (ctx.measureText(label).width + 12 <= x1 - x0) ctx.fillText(label, x0 + 8, layout.strip / 2);
+  }
+}
+
+function drawChordLane(
+  ctx: CanvasRenderingContext2D,
+  data: TRollData,
+  layout: TRollLayout,
+  theme: TRollTheme,
+  top: number,
+  alpha: number
+) {
+  ctx.font = `600 11px ${theme.mono}`;
+  ctx.textBaseline = 'middle';
+  for (const span of data.spans) {
+    const x0 = beatX(layout, data, span.start) + 2;
+    const w = beatX(layout, data, span.start + span.duration) - x0 - 2;
+    const y = top + 6;
+    ctx.globalAlpha = alpha * 0.18;
+    ctx.fillStyle = theme.chords;
+    block(ctx, x0, y, w, 22, 6);
+    ctx.fill();
+    ctx.globalAlpha = alpha * 0.55;
+    ctx.strokeStyle = theme.chords;
+    ctx.lineWidth = 1;
+    block(ctx, x0 + 0.5, y + 0.5, w - 1, 21, 5.5);
+    ctx.stroke();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x0, y, Math.max(0, w - 4), 22);
+    ctx.clip();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = theme.chordText;
+    ctx.fillText(chordName(span.chord, data.key), x0 + 7, y + 11);
+    ctx.restore();
+  }
+}
+
+function drawBassLane(
+  ctx: CanvasRenderingContext2D,
+  data: TRollData,
+  layout: TRollLayout,
+  theme: TRollTheme,
+  top: number,
+  alpha: number
+) {
+  const total = totalBeats(data);
+  const notes = data.bass.filter((note) => note.start < total);
+  if (!notes.length) return;
+  const low = Math.min(...notes.map((note) => note.midi));
+  const high = Math.max(...notes.map((note) => note.midi));
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = theme.bass;
+  for (const note of notes) {
+    const x0 = beatX(layout, data, note.start) + 1;
+    const x1 = beatX(layout, data, Math.min(total, note.start + note.duration)) - 1;
+    const y = top + (high === low ? 13 : 6 + ((high - note.midi) / (high - low)) * 14);
+    block(ctx, x0, y, x1 - x0, 8, 3);
+    ctx.fill();
+  }
+}
+
+function drawDrumLane(
+  ctx: CanvasRenderingContext2D,
+  data: TRollData,
+  layout: TRollLayout,
+  theme: TRollTheme,
+  top: number,
+  alpha: number
+) {
+  const total = totalBeats(data);
+  ctx.fillStyle = theme.drums;
+  for (const hit of data.drums) {
+    if (hit.time < 0 || hit.time >= total) continue;
+    const mark = DRUM_MARKS[hit.drum];
+    ctx.globalAlpha = alpha * mark.alpha;
+    block(
+      ctx,
+      beatX(layout, data, hit.time) + 2,
+      top + mark.top,
+      mark.size,
+      mark.size,
+      mark.radius
+    );
+    ctx.fill();
+  }
+}
+
+function drawLaneLabel(
+  ctx: CanvasRenderingContext2D,
+  theme: TRollTheme,
+  label: string,
+  color: string,
+  top: number,
+  alpha: number
+) {
+  const middle = top + LANE / 2;
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(LABEL_X + 3.5, middle, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = theme.laneText;
+  ctx.font = `600 11px ${theme.sans}`;
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, LABEL_X + 14, middle);
+}
+
+export function drawRoll(
+  ctx: CanvasRenderingContext2D,
+  data: TRollData,
+  layout: TRollLayout,
+  theme: TRollTheme,
+  tracks: Record<TTrackId, boolean>
+) {
+  const { width, height, gutter, strip } = layout;
+  ctx.clearRect(0, 0, width, height);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = theme.background;
+  ctx.fillRect(0, 0, width, height);
+
+  drawPitchArea(ctx, data, layout, theme);
+  for (let bar = 1; bar < data.bars; bar++) {
+    vLine(ctx, beatX(layout, data, bar * data.beatsPerBar), strip, height, theme.barLine);
+  }
+  drawNotes(ctx, data, layout, theme);
+  drawContour(ctx, data, layout, theme, tracks.hum ? 1 : HUM_DIMMED);
+  drawChordNames(ctx, data, layout, theme);
+
+  const colors: Record<TLaneId, string> = {
+    chords: theme.chords,
+    bass: theme.bass,
+    drums: theme.drums,
+  };
+  LANES.forEach((lane, index) => {
+    const top = laneTop(layout, index);
+    const alpha = tracks[lane.id] ? 1 : DIMMED;
+    if (lane.id === 'chords') drawChordLane(ctx, data, layout, theme, top, alpha);
+    if (lane.id === 'bass') drawBassLane(ctx, data, layout, theme, top, alpha);
+    if (lane.id === 'drums') drawDrumLane(ctx, data, layout, theme, top, alpha);
+    drawLaneLabel(ctx, theme, lane.label, colors[lane.id], top, alpha);
+    ctx.globalAlpha = 1;
+    hLine(ctx, top, 0, width, theme.line);
+  });
+
+  ctx.globalAlpha = 1;
+  hLine(ctx, strip - 1, 0, width, theme.line);
+  vLine(ctx, gutter - 1, 0, height, theme.line);
+}
+
+export function playheadX(data: TRollData, layout: TRollLayout, beat: number): number {
+  const total = totalBeats(data);
+  return beatX(layout, data, ((beat % total) + total) % total);
 }
 
 export function drawPlayhead(
@@ -208,17 +455,17 @@ export function drawPlayhead(
 ) {
   ctx.clearRect(0, 0, layout.width, layout.height);
   if (beat === null) return;
-  const total = data.bars * data.beatsPerBar;
-  const x = Math.round(beatX(layout, data, ((beat % total) + total) % total)) + 0.5;
-  ctx.strokeStyle = theme.playhead;
-  ctx.lineWidth = 2;
+  const x = playheadX(data, layout, beat);
+  ctx.save();
+  ctx.shadowColor = theme.playheadGlow;
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = theme.playhead;
+  ctx.fillRect(x - 1, 0, 2, layout.height);
   ctx.beginPath();
-  ctx.moveTo(x, 0);
-  ctx.lineTo(x, layout.height);
-  ctx.stroke();
-}
-
-export function playheadX(data: TRollData, layout: TRollLayout, beat: number): number {
-  const total = data.bars * data.beatsPerBar;
-  return beatX(layout, data, ((beat % total) + total) % total);
+  ctx.moveTo(x - 6, 0);
+  ctx.lineTo(x + 6, 0);
+  ctx.lineTo(x, 9);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }

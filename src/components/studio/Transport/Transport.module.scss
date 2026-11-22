@@ -4,31 +4,24 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-4) var(--space-6);
+  gap: 14px 18px;
+  padding: 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-xl);
+  background: var(--surface-well);
 }
 
 .tracks {
   display: flex;
+  flex: 1 1 280px;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-5);
+  gap: var(--space-2);
   min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
-.legend {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 .message {
   @include type.caption;
 
   flex-basis: 100%;
-  color: var(--warning);
+  color: var(--danger-text);
 }

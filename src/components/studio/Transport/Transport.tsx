@@ -1,8 +1,9 @@
-import { Button, Toggle } from '@/components/ui';
+import { Button, PlayIcon, Spinner, StopIcon } from '@/components/ui';
 import { TRACKS } from '@/constants/styles';
 import type { TTrackId } from '@/types/song';
 
 import styles from './Transport.module.scss';
+import { TrackChip } from '../TrackChip/TrackChip';
 
 type TTransportProps = {
   playing: boolean;
@@ -12,6 +13,28 @@ type TTransportProps = {
   onToggle: () => void;
   onTrack: (track: TTrackId, on: boolean) => void;
 };
+
+function PlayLabel({ playing, loading }: { playing: boolean; loading: boolean }) {
+  if (loading) {
+    return (
+      <>
+        <Spinner />
+        Loading sounds…
+      </>
+    );
+  }
+  return playing ? (
+    <>
+      <StopIcon />
+      Stop
+    </>
+  ) : (
+    <>
+      <PlayIcon />
+      Play
+    </>
+  );
+}
 
 export function Transport({
   playing,
@@ -30,19 +53,19 @@ export function Transport({
         disabled={loading}
         aria-pressed={playing}
       >
-        {loading ? 'Loading sounds…' : playing ? 'Stop' : 'Play'}
+        <PlayLabel playing={playing} loading={loading} />
       </Button>
-      <fieldset className={styles.tracks}>
-        <legend className={styles.legend}>Tracks</legend>
+      <div className={styles.tracks} role="group" aria-label="Tracks">
         {TRACKS.map((track) => (
-          <Toggle
+          <TrackChip
             key={track.id}
+            id={track.id}
             label={track.label}
-            checked={tracks[track.id]}
+            on={tracks[track.id]}
             onChange={(on) => onTrack(track.id, on)}
           />
         ))}
-      </fieldset>
+      </div>
       {message && (
         <p className={styles.message} role="alert">
           {message}

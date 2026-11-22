@@ -1,4 +1,4 @@
-import { Button, Field, SegmentedControl, Select, Toggle } from '@/components/ui';
+import { Button, Field, SegmentedControl, Select, ShuffleIcon, Toggle } from '@/components/ui';
 import { LEAD_OPTIONS, STYLE_OPTIONS } from '@/constants/styles';
 import type { TSongSettings } from '@/lib/song/build';
 import type { TGridStep } from '@/types/music';
@@ -22,7 +22,7 @@ const STEP_OPTIONS: { value: TStep; label: string }[] = [
 export function SongControls({ settings, alternatives, onChange }: TSongControlsProps) {
   return (
     <div className={styles.controls}>
-      <div className={styles.group}>
+      <div className={styles.style}>
         <span className={styles.label}>Style</span>
         <SegmentedControl<TStyleId>
           label="Style"
@@ -48,6 +48,8 @@ export function SongControls({ settings, alternatives, onChange }: TSongControls
         <span className={styles.label}>Grid</span>
         <SegmentedControl<TStep>
           label="Grid"
+          mono
+          className={styles.grid}
           options={STEP_OPTIONS}
           value={settings.step === 0.25 ? '0.25' : '0.5'}
           onChange={(value) => onChange({ step: Number(value) as TGridStep })}
@@ -61,10 +63,11 @@ export function SongControls({ settings, alternatives, onChange }: TSongControls
         />
         <Button
           variant="ghost"
-          size="sm"
+          size="md"
           disabled={alternatives < 2}
           onClick={() => onChange({ alternative: settings.alternative + 1 })}
         >
+          <ShuffleIcon />
           Try other chords
         </Button>
       </div>

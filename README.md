@@ -137,8 +137,8 @@ src/
   app/                layout and the single page
   components/
     common/           header and footer
-    studio/           input tabs, status line, piano roll, controls, transport, export
-    ui/               button, field, panel, segmented control, select, toggle, progress bar
+    studio/           input tabs, status line, piano roll with arrangement lanes, controls, transport, export
+    ui/               button, field, panel, segmented control, select, toggle, progress bar, spinner, icons
   constants/          audio settings, examples, styles and General MIDI numbers
   hooks/              useStudio (state), useNoteFinder (worker), useRecorder, usePlayer, useExport
   lib/
@@ -149,7 +149,7 @@ src/
     arrange/          style patterns and chord voicing
     playback/         Tone.js voices, scheduling, player, offline render, piano samples
     midi/             MIDI writer, parser and song export
-    render/           piano-roll drawing
+    render/           piano-roll and lane drawing
   styles/             tokens, typography, breakpoints, global styles
   types/              shared types
   workers/            note finder worker
@@ -160,7 +160,7 @@ src/
 - Note transcription: [Basic Pitch](https://github.com/spotify/basic-pitch-ts) by Spotify, Apache License 2.0. The model files in `public/model/basic-pitch` come unchanged from the `@spotify/basic-pitch` npm package. See `NOTICE`.
 - Piano: [Salamander Grand Piano V3](https://archive.org/details/SalamanderGrandPianoV3) by Alexander Holm, CC BY 3.0, via the [Tone.js sample set](https://github.com/Tonejs/audio). 14 notes from A2 to C6, shortened and encoded to MP3. See `NOTICE`.
 - Libraries: [TensorFlow.js](https://www.tensorflow.org/js) with its WebGPU and WASM backends (Apache 2.0; the WASM binaries include [XNNPACK](https://github.com/google/XNNPACK), BSD 3-Clause), [Tone.js](https://tonejs.github.io) (MIT), [Next.js](https://nextjs.org) (MIT), [React](https://react.dev) (MIT).
-- Font: Inter from Google Fonts, SIL Open Font License.
+- Fonts: Bricolage Grotesque, Inter and JetBrains Mono from Google Fonts, SIL Open Font License.
 - Melodies: public-domain tunes, note lists written for this project. The example hums are synthesized; no recorded voice is included.
 
 ## License

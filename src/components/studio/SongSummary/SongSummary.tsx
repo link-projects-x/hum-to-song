@@ -36,13 +36,20 @@ function BpmEditor({ bpm, onBpm }: { bpm: number; onBpm: (bpm: number) => void }
           if (event.key === 'Enter') commit();
         }}
       />
-      <span>BPM</span>
-      <Button size="sm" variant="ghost" onClick={() => onBpm(bpm / 2)} aria-label="Half the tempo">
+      <span className={styles.unit}>BPM</span>
+      <Button
+        size="xs"
+        variant="ghost"
+        className={styles.factor}
+        onClick={() => onBpm(bpm / 2)}
+        aria-label="Half the tempo"
+      >
         ½×
       </Button>
       <Button
-        size="sm"
+        size="xs"
         variant="ghost"
+        className={styles.factor}
         onClick={() => onBpm(bpm * 2)}
         aria-label="Double the tempo"
       >

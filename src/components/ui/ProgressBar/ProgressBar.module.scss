@@ -6,10 +6,10 @@
   border-radius: var(--radius-pill);
   overflow: hidden;
   appearance: none;
-  background: var(--line-input);
+  background: var(--progress-track);
 
   &::-webkit-progress-bar {
-    background: var(--line-input);
+    background: var(--progress-track);
   }
 
   &::-webkit-progress-value {

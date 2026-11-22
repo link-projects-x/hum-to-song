@@ -1,40 +1,34 @@
 @use '@/styles/typography' as type;
-@use '@/styles/breakpoints' as bp;
 
 .tab {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-}
-
-.settings {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-5);
-  align-items: end;
-
-  @include bp.mobile {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  gap: 18px;
 }
 
 .value {
-  @include type.number;
-  @include type.caption;
+  @include type.mono;
 
+  font-size: 14px;
   color: var(--text-primary);
-  font-weight: 700;
 }
 
 .slider {
   width: 100%;
+  height: 24px;
+  margin: 0;
   accent-color: var(--accent);
+  cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
 }
 
-.bars {
+.length {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 10px;
 }
 
 .label {
@@ -44,14 +38,33 @@
 }
 
 .hint {
-  @include type.caption;
+  @include type.text;
 
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
-.actions {
+.live {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-5);
+  gap: 18px;
+}
+
+.stop {
+  border-color: var(--line-strong);
+}
+
+.stopMark {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--text-primary);
+}
+
+.recordMark {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-ink);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-ink) 20%, transparent);
 }

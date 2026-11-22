@@ -2,16 +2,30 @@
 
 .header {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+
+  svg {
+    flex: none;
+  }
+}
+
+.text {
+  display: flex;
+  flex: 1 1 300px;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-8) 0 var(--space-6);
+  gap: var(--space-1);
+  min-width: 0;
 }
 
 .title {
-  @include type.brand;
+  @include type.display;
 }
 
 .tagline {
+  @include type.body;
+
   max-width: 640px;
   color: var(--text-secondary);
 }

@@ -1,23 +1,16 @@
-@use '@/styles/breakpoints' as bp;
-
 .scroller {
   position: relative;
-  height: var(--roll-height);
   overflow-x: auto;
   overflow-y: hidden;
   border: 1px solid var(--line);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
   background: var(--roll-bg);
-
-  @include bp.mobile {
-    height: calc(var(--roll-height) * 0.8);
-  }
 }
 
 .canvases {
   position: relative;
   width: var(--canvas-width);
-  height: 100%;
+  height: var(--canvas-height);
 }
 
 .canvas {

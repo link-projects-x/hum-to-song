@@ -1,10 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 
 import { Footer } from '@/components/common/Footer/Footer';
 import { Header } from '@/components/common/Header/Header';
-import { Panel, SegmentedControl } from '@/components/ui';
+import { MicIcon, NotesIcon, Panel, SegmentedControl, UploadIcon } from '@/components/ui';
 import { EXAMPLES } from '@/constants/examples';
 import { useExport } from '@/hooks/useExport';
 import { usePlayer } from '@/hooks/usePlayer';
@@ -24,10 +25,10 @@ import { UploadTab } from '../UploadTab/UploadTab';
 
 type TInputMode = 'record' | 'upload' | 'example';
 
-const MODES: { value: TInputMode; label: string }[] = [
-  { value: 'record', label: 'Record' },
-  { value: 'upload', label: 'Upload' },
-  { value: 'example', label: 'Examples' },
+const MODES: { value: TInputMode; label: string; icon: ReactNode }[] = [
+  { value: 'record', label: 'Record', icon: <MicIcon /> },
+  { value: 'upload', label: 'Upload', icon: <UploadIcon /> },
+  { value: 'example', label: 'Examples', icon: <NotesIcon /> },
 ];
 
 export function Studio() {
@@ -67,44 +68,47 @@ export function Studio() {
 
   return (
     <div className={styles.page}>
-      <Header />
-      <main className={styles.main}>
-        <Panel title="Your tune" titleId="tune-title">
-          <SegmentedControl<TInputMode>
-            label="How to add your tune"
-            options={MODES}
-            value={mode}
-            disabled={busy}
-            onChange={choose}
-          />
-          {mode === 'record' && (
-            <RecordTab
-              bpm={bpm}
-              bars={bars}
-              recorder={recorder.state}
-              busy={busy}
-              onBpm={setBpm}
-              onBars={setBars}
-              onRecord={() => start(() => recorder.record({ bpm, bars, beatsPerBar: 4 }))}
-              onStop={recorder.stop}
+      <div className={styles.inner}>
+        <Header />
+        <main className={styles.main}>
+          <Panel title="Your tune" titleId="tune-title" className={styles.tune}>
+            <SegmentedControl<TInputMode>
+              label="How to add your tune"
+              size="lg"
+              options={MODES}
+              value={mode}
+              disabled={busy}
+              onChange={choose}
             />
-          )}
-          {mode === 'upload' && (
-            <UploadTab busy={busy} onFile={(file) => start(() => readUploadTake(file))} />
-          )}
-          {mode === 'example' && (
-            <ExampleTab
-              examples={EXAMPLES}
-              busy={busy}
-              onPick={(example) => start(() => loadExampleTake(example))}
-            />
-          )}
-        </Panel>
-        <StatusLine view={view} />
-        {studio.song && studio.transcription && (
+            {mode === 'record' && (
+              <RecordTab
+                bpm={bpm}
+                bars={bars}
+                recorder={recorder.state}
+                busy={busy}
+                onBpm={setBpm}
+                onBars={setBars}
+                onRecord={() => start(() => recorder.record({ bpm, bars, beatsPerBar: 4 }))}
+                onStop={recorder.stop}
+              />
+            )}
+            {mode === 'upload' && (
+              <UploadTab busy={busy} onFile={(file) => start(() => readUploadTake(file))} />
+            )}
+            {mode === 'example' && (
+              <ExampleTab
+                examples={EXAMPLES}
+                current={studio.take?.source === 'example' ? studio.take.name : null}
+                busy={busy}
+                onPick={(example) => start(() => loadExampleTake(example))}
+              />
+            )}
+            <StatusLine view={view} />
+          </Panel>
           <SongPanel
+            className={styles.song}
             song={studio.song}
-            contour={studio.transcription.contour}
+            contour={studio.transcription?.contour ?? null}
             settings={studio.settings}
             editableBpm={studio.take?.source === 'upload'}
             playing={player.playing}
@@ -120,12 +124,9 @@ export function Studio() {
             onTrack={player.setTrack}
             onExport={(kind) => void exporter.run(kind)}
           />
-        )}
-        {!studio.song && studio.status.phase === 'idle' && recorder.state.phase === 'idle' && (
-          <p className={styles.empty}>Your song shows up here once there is a tune to work with.</p>
-        )}
-      </main>
-      <Footer />
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }

@@ -1,27 +1,22 @@
 @use '@/styles/typography' as type;
-@use '@/styles/breakpoints' as bp;
 
 .panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 18px;
   min-width: 0;
-  padding: var(--panel-padding);
+  padding: var(--card-padding);
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
   background: var(--surface);
-
-  @include bp.mobile {
-    padding: var(--space-4);
-  }
 }
 
 .header {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-3) var(--space-6);
 }
 
 .title {

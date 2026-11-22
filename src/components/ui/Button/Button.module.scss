@@ -1,15 +1,13 @@
 @use '@/styles/typography' as type;
 
 .button {
-  @include type.body;
+  @include type.control;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
   transition:
@@ -19,54 +17,86 @@
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.45;
   }
 }
 
 .primary {
+  border: 0;
   background: var(--accent);
   color: var(--accent-ink);
 
   &:hover:not(:disabled) {
     background: var(--accent-hover);
   }
+
+  &:disabled {
+    background: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
 }
 
 .secondary {
-  background: var(--surface-raised);
-  border-color: var(--line-input);
+  background: var(--surface-control);
+  border-color: var(--line-control);
   color: var(--text-primary);
 
   &:hover:not(:disabled) {
     border-color: var(--line-strong);
   }
+
+  &:disabled {
+    color: var(--text-secondary);
+  }
 }
 
 .ghost {
   background: transparent;
-  border-color: var(--line-input);
-  color: var(--text-secondary);
+  border-color: var(--line-control);
+  color: var(--text-primary);
 
   &:hover:not(:disabled) {
-    color: var(--text-primary);
-    border-color: var(--line-strong);
+    background: var(--surface-control);
+  }
+
+  &:disabled {
+    opacity: 0.45;
   }
 }
 
-.lg {
-  min-height: 52px;
+.xl {
+  @include type.action;
+
+  min-height: 56px;
   padding: 0 var(--space-6);
+  border-radius: var(--radius-xl);
+  gap: var(--space-3);
+}
+
+.lg {
+  @include type.action;
+
+  min-height: 52px;
+  padding: 0 var(--space-6) 0 18px;
+  border-radius: var(--radius-lg);
+  gap: 10px;
 }
 
 .md {
-  min-height: var(--control-height);
+  min-height: 48px;
   padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  gap: 9px;
 }
 
 .sm {
-  min-height: var(--control-height-sm);
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+}
+
+.xs {
+  min-height: 40px;
   padding: 0 var(--space-3);
-  font-size: 14px;
+  border-radius: var(--radius-sm);
 }
 
 .block {

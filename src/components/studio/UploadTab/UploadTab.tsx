@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { DragEvent } from 'react';
 
-import { cx } from '@/components/ui';
+import { UploadIcon, cx } from '@/components/ui';
 import { UPLOAD_ACCEPT } from '@/constants/audio';
 
 import styles from './UploadTab.module.scss';
@@ -19,7 +19,7 @@ export function UploadTab({ busy, onFile }: TUploadTabProps) {
   return (
     <div className={styles.tab}>
       <label
-        className={cx(styles.drop, over && styles.over, busy && styles.disabled)}
+        className={cx(styles.drop, over && !busy && styles.over, busy && styles.disabled)}
         onDragOver={(event) => {
           event.preventDefault();
           setOver(true);
@@ -38,6 +38,9 @@ export function UploadTab({ busy, onFile }: TUploadTabProps) {
             if (file) onFile(file);
           }}
         />
+        <span className={styles.icon}>
+          <UploadIcon size={28} strokeWidth={1.8} />
+        </span>
         <span className={styles.button}>Choose a voice memo</span>
         <span className={styles.hint}>
           or drop it here · WAV, MP3, M4A, WebM or OGG, up to 60 seconds

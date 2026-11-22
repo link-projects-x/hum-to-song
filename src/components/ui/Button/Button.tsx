@@ -4,7 +4,7 @@ import { cx } from '../cx';
 import styles from './Button.module.scss';
 
 type TButtonVariant = 'primary' | 'secondary' | 'ghost';
-type TButtonSize = 'lg' | 'md' | 'sm';
+type TButtonSize = 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 
 type TButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: TButtonVariant;

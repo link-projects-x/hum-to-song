@@ -7,21 +7,50 @@
 .status {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--line);
+  gap: 10px;
+  padding: var(--space-3) 14px;
+  border: 1px solid var(--line-row);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--surface-soft);
+  color: var(--text-primary);
 }
 
-.error {
-  border-color: var(--warning);
-  background: var(--warning-soft);
-  color: var(--warning);
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--track-hum);
 }
 
 .text {
-  @include type.body;
+  @include type.text;
 
-  font-weight: 600;
+  line-height: 1.45;
+}
+
+.live {
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+
+  .dot {
+    background: var(--accent);
+  }
+}
+
+.error {
+  border-color: color-mix(in srgb, var(--danger) 42%, transparent);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger-text);
+
+  .dot {
+    background: var(--danger);
+  }
 }

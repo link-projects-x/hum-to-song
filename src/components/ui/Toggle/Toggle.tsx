@@ -18,7 +18,7 @@ export function Toggle({ label, checked, disabled, onChange }: TToggleProps) {
         onChange={(event) => onChange(event.target.checked)}
       />
       <span className={styles.track} aria-hidden="true" />
-      <span className={styles.label}>{label}</span>
+      <span>{label}</span>
     </label>
   );
 }
