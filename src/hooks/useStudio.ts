@@ -3,6 +3,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { buildSong } from '@/lib/song/build';
 import type { TSongSettings } from '@/lib/song/build';
 import { BEATS_PER_BAR, gridFor, withBpm } from '@/lib/song/grid';
+import type { TSharedSong } from '@/lib/song/share';
 import type { TSong } from '@/types/song';
 import type { TStudioStatus } from '@/types/status';
 import type { TKnownGrid, TTake } from '@/types/take';
@@ -16,6 +17,7 @@ export const DEFAULT_SETTINGS: TSongSettings = {
   style: 'dance',
   lead: 'auto',
   alternative: 0,
+  mode: null,
 };
 
 const yieldToPaint = () => new Promise<void>((resolve) => setTimeout(resolve, 16));
@@ -62,7 +64,7 @@ export function useStudio() {
         setTake(next);
         setTranscription(result);
         setGrid(gridFor(next, result.notes));
-        setSettings((value) => ({ ...value, alternative: 0 }));
+        setSettings((value) => ({ ...value, alternative: 0, mode: null }));
         setStatus({ phase: 'ready' });
       } catch (error) {
         if (!current()) return;
@@ -77,6 +79,26 @@ export function useStudio() {
   const fail = useCallback((error: unknown) => {
     runRef.current += 1;
     setStatus({ phase: 'error', message: errorText(error) });
+  }, []);
+
+  const openShared = useCallback((shared: TSharedSong) => {
+    runRef.current += 1;
+    setTake({
+      source: 'link',
+      name: 'Shared song',
+      samples: new Float32Array(0),
+      grid: shared.grid,
+    });
+    setTranscription({
+      notes: shared.notes,
+      contour: { times: new Float32Array(0), pitches: new Float32Array(0) },
+      duration: 0,
+      tuning: 0,
+      voiced: true,
+    });
+    setGrid(shared.grid);
+    setSettings(shared.settings);
+    setStatus({ phase: 'ready' });
   }, []);
 
   const reset = useCallback(() => {
@@ -116,6 +138,7 @@ export function useStudio() {
     prepare,
     process,
     fail,
+    openShared,
     reset,
     setBpm,
     update,

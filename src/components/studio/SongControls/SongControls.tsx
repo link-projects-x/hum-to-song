@@ -1,7 +1,7 @@
 import { Button, Field, SegmentedControl, Select, ShuffleIcon, Toggle } from '@/components/ui';
 import { LEAD_OPTIONS, STYLE_OPTIONS } from '@/constants/styles';
 import type { TSongSettings } from '@/lib/song/build';
-import type { TGridStep } from '@/types/music';
+import type { TGridStep, TMode } from '@/types/music';
 import type { TLeadId, TStyleId } from '@/types/song';
 
 import styles from './SongControls.module.scss';
@@ -10,18 +10,34 @@ type TStep = '0.5' | '0.25';
 
 type TSongControlsProps = {
   settings: TSongSettings;
+  mode: TMode;
   alternatives: number;
   onChange: (patch: Partial<TSongSettings>) => void;
 };
+
+const MOOD_OPTIONS: { value: TMode; label: string }[] = [
+  { value: 'major', label: 'Happy' },
+  { value: 'minor', label: 'Sad' },
+];
 
 const STEP_OPTIONS: { value: TStep; label: string }[] = [
   { value: '0.5', label: '1/8' },
   { value: '0.25', label: '1/16' },
 ];
 
-export function SongControls({ settings, alternatives, onChange }: TSongControlsProps) {
+export function SongControls({ settings, mode, alternatives, onChange }: TSongControlsProps) {
   return (
     <div className={styles.controls}>
+      <div className={styles.group}>
+        <span className={styles.label}>Mood</span>
+        <SegmentedControl<TMode>
+          label="Mood"
+          className={styles.mood}
+          options={MOOD_OPTIONS}
+          value={mode}
+          onChange={(next) => onChange({ mode: next })}
+        />
+      </div>
       <div className={styles.style}>
         <span className={styles.label}>Style</span>
         <SegmentedControl<TStyleId>

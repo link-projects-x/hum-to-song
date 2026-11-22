@@ -1,4 +1,4 @@
-export type TTakeSource = 'mic' | 'upload' | 'example';
+export type TTakeSource = 'mic' | 'upload' | 'example' | 'link';
 
 export type TKnownGrid = { bpm: number; offset: number; bars: number };
 
@@ -8,3 +8,5 @@ export type TTake = {
   samples: Float32Array<ArrayBuffer>;
   grid: TKnownGrid | null;
 };
+
+export type TPitchPoint = { beat: number; midi: number | null };

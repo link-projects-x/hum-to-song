@@ -2,8 +2,10 @@ export { Button } from './Button/Button';
 export { cx } from './cx';
 export { Field } from './Field/Field';
 export {
+  CheckIcon,
   ChevronIcon,
   DownloadIcon,
+  LinkIcon,
   LogoMark,
   MicIcon,
   NotesIcon,

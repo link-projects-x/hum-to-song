@@ -9,6 +9,7 @@ type TTransportProps = {
   playing: boolean;
   loading: boolean;
   tracks: Record<TTrackId, boolean>;
+  humAvailable: boolean;
   message: string | null;
   onToggle: () => void;
   onTrack: (track: TTrackId, on: boolean) => void;
@@ -40,6 +41,7 @@ export function Transport({
   playing,
   loading,
   tracks,
+  humAvailable,
   message,
   onToggle,
   onTrack,
@@ -56,15 +58,19 @@ export function Transport({
         <PlayLabel playing={playing} loading={loading} />
       </Button>
       <div className={styles.tracks} role="group" aria-label="Tracks">
-        {TRACKS.map((track) => (
-          <TrackChip
-            key={track.id}
-            id={track.id}
-            label={track.label}
-            on={tracks[track.id]}
-            onChange={(on) => onTrack(track.id, on)}
-          />
-        ))}
+        {TRACKS.map((track) => {
+          const missing = track.id === 'hum' && !humAvailable;
+          return (
+            <TrackChip
+              key={track.id}
+              id={track.id}
+              label={track.label}
+              on={tracks[track.id] && !missing}
+              disabled={missing}
+              onChange={(on) => onTrack(track.id, on)}
+            />
+          );
+        })}
       </div>
       {message && (
         <p className={styles.message} role="alert">

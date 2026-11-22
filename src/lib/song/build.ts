@@ -1,9 +1,10 @@
 import { arrange } from '@/lib/arrange/styles';
 import { harmonize } from '@/lib/music/chords';
 import { detectKey } from '@/lib/music/key';
+import { changeMode } from '@/lib/music/mode';
 import { quantizeNotes } from '@/lib/music/quantize';
 import { snapToKey } from '@/lib/music/scale';
-import type { TGrid, TGridStep } from '@/types/music';
+import type { TGrid, TGridStep, TMode } from '@/types/music';
 import type { TLeadId, TSong, TStyleId } from '@/types/song';
 import type { TRawNote } from '@/types/transcription';
 
@@ -13,6 +14,7 @@ export type TSongSettings = {
   style: TStyleId;
   lead: TLeadId;
   alternative: number;
+  mode: TMode | null;
 };
 
 export function buildSong(
@@ -23,8 +25,10 @@ export function buildSong(
   const grid: TGrid = { ...base, step: settings.step };
   const quantized = quantizeNotes(raw, grid);
   if (!quantized.length) return null;
-  const key = detectKey(quantized, grid.beatsPerBar);
-  const notes = settings.snap ? snapToKey(quantized, key) : quantized;
+  const hummed = detectKey(quantized, grid.beatsPerBar);
+  const snapped = settings.snap ? snapToKey(quantized, hummed) : quantized;
+  const key = { ...hummed, mode: settings.mode ?? hummed.mode };
+  const notes = changeMode(snapped, hummed, key.mode);
   const progressions = harmonize(notes, key, { bars: grid.bars, beatsPerBar: grid.beatsPerBar });
   const progressionIndex = progressions.length ? settings.alternative % progressions.length : 0;
   const spans = progressions[progressionIndex]?.spans ?? [];
@@ -42,6 +46,7 @@ export function buildSong(
     grid,
     notes,
     key,
+    hummedMode: hummed.mode,
     progressions: progressions.map((progression) => progression.spans),
     progressionIndex,
     spans,

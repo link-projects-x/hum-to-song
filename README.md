@@ -1,6 +1,6 @@
 # Hum to Song
 
-A web app that turns a hummed melody into a short song. A small neural network in the browser finds the notes; the app then detects the key, writes chords, bass and drums in one of three styles, plays the result alongside the original hum and exports MIDI and WAV.
+A web app that turns a hummed melody into a short song. A small neural network in the browser finds the notes; the app then detects the key, writes chords, bass and drums in one of three styles, plays the result alongside the original hum and exports MIDI and WAV. A tune can be switched between major and minor, the voice is drawn on the piano roll while it is recorded, and a song can be shared as a link.
 
 Everything runs in the browser. Audio is not uploaded anywhere.
 
@@ -9,7 +9,7 @@ Demo: not deployed yet.
 ## How it works
 
 ```
-mic (count-in, 4 or 8 bars) │ voice memo (up to 60 s) │ built-in example
+mic (count-in, up to 4 or 8 bars) │ voice memo (up to 60 s) │ built-in example │ song link
   ─► mono audio at 22,050 Hz                                      src/lib/audio
   ─► Basic Pitch in a Web Worker (WebGPU, WASM, WebGL or CPU)      src/workers, src/lib/transcribe
   ─► note, onset and pitch-contour activations ─► notes in seconds
@@ -20,17 +20,17 @@ mic (count-in, 4 or 8 bars) │ voice memo (up to 60 s) │ built-in example
   ─► song MIDI, melody MIDI, WAV                                   src/lib/midi, src/lib/playback/render.ts
 ```
 
-1. Input. Recording uses `getUserMedia` with echo cancellation, noise suppression and auto gain off, a separate `AudioContext` and an `AudioWorklet` that copies raw samples. One bar of clicks plays first; recording then runs for the chosen number of bars plus the measured audio latency and a 0.3 s tail, and the latency becomes the grid offset. Uploads and examples are decoded with an `OfflineAudioContext` at 22,050 Hz. Uploads are limited to 60 seconds and 30 MB.
+1. Input. Recording uses `getUserMedia` with echo cancellation, noise suppression and auto gain off, a separate `AudioContext` and an `AudioWorklet` that copies raw samples. One bar of clicks plays first; recording then runs for the chosen number of bars plus the measured audio latency and a 0.3 s tail, and the latency becomes the grid offset. Stop before the first beat is over cancels the take; after that it ends the take at the press plus the latency and the tail. A recorded song ends at the bar of its last note. While recording, a YIN pitch tracker (2048-sample window decimated to 16 kHz, 65 to 1,000 Hz, threshold 0.15) draws the voice on the piano roll. Uploads and examples are decoded with an `OfflineAudioContext` at 22,050 Hz. Uploads are limited to 60 seconds and 30 MB.
 2. Note finder. The worker starts when Record is pressed, when the Upload or Examples tab opens, or when a file is picked; for a recording, the model loads during the count-in and the take. It downloads `model.json` and the weights from `public/model/basic-pitch/` with byte progress, loads the graph from memory, runs one second of silence to compile the kernels, then runs Basic Pitch in 2-second windows. It tries the TensorFlow.js backends in the order WebGPU, WASM (SIMD, one thread), WebGL, CPU and keeps the first one that starts and runs the silence without an error. The order comes from the measurements at the end of Accuracy.
 3. Notes. For every model frame (11.6 ms) the strongest semitone between MIDI 36 and 84 is taken from the note activations. A frame counts as voiced when that activation is at least 0.15 and the frame energy is above the gate. The fine pitch comes from the contour output (3 bins per semitone) with parabolic peak interpolation. The contour peak sits one bin, a third of a semitone, above the bin that the Basic Pitch JS code assigns to a pitch; this offset was measured on the synthetic hums and is corrected in `src/lib/transcribe/frames.ts`. A global tuning offset (circular mean of the deviation from the nearest semitone) is removed before snapping to semitones.
 4. Clean-up. Runs of one semitone become notes. Gaps of up to 3 frames inside a run are bridged. A run splits at an onset activation peak of 0.8 or more, or at an energy dip of 6 dB or more, which separates repeated notes. Notes shorter than 130 ms join a neighbour within 30 ms and 2 semitones (a scoop into the next note, or the end of the previous one) or are dropped. A note's pitch is the median of the contour over its middle 60 %. The line stays monophonic.
 5. Silence gate. Energy is measured over 25 ms windows. The gate is the lower of the 3rd-percentile energy plus 10 dB and the 95th percentile minus 25 dB, never below −60 dBFS. A take with fewer than 3 notes or less than 1 second of notes is reported as "no tune".
 6. Grid. Recordings and examples have a known tempo and downbeat. For uploads, tempo candidates from 70 to 140 BPM are scored by how close the onsets fall to an eighth-note grid (Gaussian, σ = 35 ms, on-beat 1, off-beat 0.5) at the best of 48 phases, minus the score expected by chance, with a mild prior around 105 BPM; the winner is refined by a least-squares fit. The downbeat is the beat of the bar that maximises duration-weighted metric weight (beats 1–4: 1, 0.25, 0.5, 0.25; off-beats 0.1), plus 0.1 when the first note lands on it. The BPM field accepts 40–240 and has ½× and 2× buttons.
 7. Quantising. Onsets round to the nearest grid step. When two notes land on one step, the later one moves to the next step if it lasts past it; otherwise the longer note stays. Note ends round to the grid, stretch to the next onset when the gap is shorter than a step, and last at least one step.
-8. Key. Krumhansl–Schmuckler: the pitch-class profile (note duration times beat weight) is correlated with the major and minor profiles in all 24 rotations. The profiles are Temperley's, not Krumhansl–Kessler's (see Accuracy). Snap to key, on by default, moves out-of-key notes to the nearest scale tone (major, or natural minor plus the raised seventh), on the side the sung pitch leans to.
+8. Key. Krumhansl–Schmuckler: the pitch-class profile (note duration times beat weight) is correlated with the major and minor profiles in all 24 rotations. The profiles are Temperley's, not Krumhansl–Kessler's (see Accuracy). Snap to key, on by default, moves out-of-key notes to the nearest scale tone (major, or natural minor plus the raised seventh), on the side the sung pitch leans to. Happy and Sad switch the tune to the major or minor of the same tonic: minor lowers the third, sixth and seventh degrees by a semitone, major raises them, and the chords are written again in the new key.
 9. Chords. A Viterbi search runs over half bars. States are the diatonic triads, plus V and V7 in minor. A note scores overlap × beat weight × fit (root 1, third or fifth 0.9, seventh 0.7, other −0.8). Moves come from a table of common progressions (V→I, ii→V, IV→V, vi→IV and so on); staying on a chord costs 1, changing inside a bar costs another 0.8, and the tonic gets a bonus at the start (0.8) and the end (1). The search keeps the 8 best paths per state; Try other chords steps through them.
 10. Styles. Dance: kick on every beat, clap on 2 and 4, open hats on the off-beats with quiet closed hats between, bass on the off-beat eighths, sustained saw-pad chords, a filtered-saw pluck doubling the melody. Lo-fi: eighth-note hats swung to 0.62 of a beat, soft kick and snare, electric-piano chords with sevenths, warm triangle bass. Ballad: piano chords broken into eighths, soft kick, rim clicks on 2 and 4, quiet hats, sine bass, piano lead. The lead can be changed; the melody moves by whole octaves into the lead's range.
-11. Playback and export. The Tone.js transport loops the song, and every track has its own gain for the on/off toggles. The "Your hum" track plays the original recording from the grid offset, so its first beat lines up with the song. It is off by default. Song MIDI is format 1: a tempo track, then melody, chords, bass, and drums on channel 10. Melody MIDI is format 0 with one track. The WAV is rendered with `Tone.Offline` at 44.1 kHz, 16-bit stereo, with the current track toggles and a 2-second tail, and its peak is scaled down to −1 dBFS when it goes above.
+11. Playback and export. The Tone.js transport loops the song, and every track has its own gain for the on/off toggles. The "Your hum" track plays the original recording from the grid offset, so its first beat lines up with the song. It is off by default. Song MIDI is format 1: a tempo track, then melody, chords, bass, and drums on channel 10. Melody MIDI is format 0 with one track. The WAV is rendered with `Tone.Offline` at 44.1 kHz, 16-bit stereo, with the current track toggles and a 2-second tail, and its peak is scaled down to −1 dBFS when it goes above. Copy link packs the notes (start, length, semitone, cents, loudness), the grid, the settings and the track toggles into 14 bytes plus 7 per note, base64url, after `#song=` in the address. The link carries no audio, so the hum track is off when it opens.
 
 ## Accuracy
 
@@ -137,15 +137,15 @@ src/
   app/                layout and the single page
   components/
     common/           header and footer
-    studio/           input tabs, status line, piano roll with arrangement lanes, controls, transport, export
+    studio/           input tabs, status line, live and song piano rolls with arrangement lanes, controls, transport, export and link
     ui/               button, field, panel, segmented control, select, toggle, progress bar, spinner, icons
   constants/          audio settings, examples, styles and General MIDI numbers
   hooks/              useStudio (state), useNoteFinder (worker), useRecorder, usePlayer, useExport
   lib/
-    audio/            decoding, energy, recorder, WAV codec
+    audio/            decoding, energy, recorder, live pitch tracking, WAV codec
     transcribe/       model loading and inference, frame timing, note decoding
-    music/            key, scale, chords, tempo, meter, quantising, names
-    song/             song building, grid estimate, status texts
+    music/            key, scale, mode change, chords, tempo, meter, quantising, names
+    song/             song building, grid estimate, song links, status texts
     arrange/          style patterns and chord voicing
     playback/         Tone.js voices, scheduling, player, offline render, piano samples
     midi/             MIDI writer, parser and song export

@@ -1,17 +1,20 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import { Footer } from '@/components/common/Footer/Footer';
 import { Header } from '@/components/common/Header/Header';
 import { MicIcon, NotesIcon, Panel, SegmentedControl, UploadIcon } from '@/components/ui';
 import { EXAMPLES } from '@/constants/examples';
+import { TRACKS } from '@/constants/styles';
 import { useExport } from '@/hooks/useExport';
 import { usePlayer } from '@/hooks/usePlayer';
 import { useRecorder } from '@/hooks/useRecorder';
 import { useStudio } from '@/hooks/useStudio';
 import { loadExampleTake, readUploadTake } from '@/lib/audio/takes';
+import { BEATS_PER_BAR } from '@/lib/song/grid';
+import { songFromHash, songLink } from '@/lib/song/share';
 import { statusView } from '@/lib/song/status';
 import { MODEL_RATE } from '@/lib/transcribe/frames';
 import type { TTake } from '@/types/take';
@@ -23,7 +26,11 @@ import { SongPanel } from '../SongPanel/SongPanel';
 import { StatusLine } from '../StatusLine/StatusLine';
 import { UploadTab } from '../UploadTab/UploadTab';
 
+import type { TLiveTake } from '../SongPanel/SongPanel';
+
 type TInputMode = 'record' | 'upload' | 'example';
+
+const SONG_HASH = '#song=';
 
 const MODES: { value: TInputMode; label: string; icon: ReactNode }[] = [
   { value: 'record', label: 'Record', icon: <MicIcon /> },
@@ -37,16 +44,26 @@ export function Studio() {
   const [mode, setMode] = useState<TInputMode>('record');
   const [bpm, setBpm] = useState(100);
   const [bars, setBars] = useState(4);
+  const [fromMic, setFromMic] = useState(false);
+  const { openShared } = studio;
 
   const hum = useMemo(
     () =>
-      studio.take && studio.grid
+      studio.take && studio.grid && studio.take.samples.length > 0
         ? { samples: studio.take.samples, rate: MODEL_RATE, offset: studio.grid.offset }
         : null,
     [studio.take, studio.grid]
   );
   const player = usePlayer(studio.song?.arrangement ?? null, hum);
   const exporter = useExport(studio.song, studio.take?.name ?? 'my hum', hum, player.tracks);
+  const { setTrack } = player;
+
+  useEffect(() => {
+    const shared = songFromHash(window.location.hash);
+    if (!shared) return;
+    openShared(shared);
+    TRACKS.forEach(({ id }) => setTrack(id, shared.tracks[id]));
+  }, [openShared, setTrack]);
 
   const busy =
     recorder.state.phase !== 'idle' ||
@@ -54,10 +71,45 @@ export function Studio() {
     studio.status.phase === 'notes' ||
     studio.status.phase === 'chords';
 
-  const start = (load: () => Promise<TTake>) => {
+  const start = (load: () => Promise<TTake>, mic = false) => {
     player.stop();
+    setFromMic(mic);
+    if (window.location.hash.startsWith(SONG_HASH)) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
     void studio.process(load);
   };
+
+  const share = async () => {
+    if (!studio.song || !studio.transcription || !studio.grid) return false;
+    const link = songLink(window.location.href, {
+      notes: studio.transcription.notes,
+      grid: studio.grid,
+      settings: { ...studio.settings, alternative: studio.song.progressionIndex },
+      tracks: { ...player.tracks, hum: false },
+    });
+    window.history.replaceState(null, '', link);
+    try {
+      await navigator.clipboard.writeText(link);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const recording = ['countin', 'recording', 'saving'].includes(recorder.state.phase);
+  const working = ['opening', 'notes', 'chords'].includes(studio.status.phase);
+  const live: TLiveTake | null =
+    recording || (fromMic && working)
+      ? {
+          trace: recorder.trace,
+          bars,
+          position:
+            recorder.state.phase === 'recording'
+              ? Math.min(recorder.state.progress, 0.999) * bars * BEATS_PER_BAR
+              : null,
+        }
+      : null;
 
   const choose = (next: TInputMode) => {
     setMode(next);
@@ -88,7 +140,9 @@ export function Studio() {
                 busy={busy}
                 onBpm={setBpm}
                 onBars={setBars}
-                onRecord={() => start(() => recorder.record({ bpm, bars, beatsPerBar: 4 }))}
+                onRecord={() =>
+                  start(() => recorder.record({ bpm, bars, beatsPerBar: BEATS_PER_BAR }), true)
+                }
                 onStop={recorder.stop}
               />
             )}
@@ -109,6 +163,8 @@ export function Studio() {
             className={styles.song}
             song={studio.song}
             contour={studio.transcription?.contour ?? null}
+            live={live}
+            humAvailable={hum !== null}
             settings={studio.settings}
             editableBpm={studio.take?.source === 'upload'}
             playing={player.playing}
@@ -123,6 +179,7 @@ export function Studio() {
             onToggle={() => void player.toggle()}
             onTrack={player.setTrack}
             onExport={(kind) => void exporter.run(kind)}
+            onShare={share}
           />
         </main>
         <Footer />

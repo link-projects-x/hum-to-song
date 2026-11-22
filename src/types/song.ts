@@ -1,4 +1,4 @@
-import type { TChordSpan, TGrid, TKeyEstimate, TNote } from './music';
+import type { TChordSpan, TGrid, TKeyEstimate, TMode, TNote } from './music';
 
 export type TStyleId = 'dance' | 'lofi' | 'ballad';
 
@@ -37,6 +37,7 @@ export type TSong = {
   grid: TGrid;
   notes: TNote[];
   key: TKeyEstimate;
+  hummedMode: TMode;
   progressions: TChordSpan[][];
   progressionIndex: number;
   spans: TChordSpan[];

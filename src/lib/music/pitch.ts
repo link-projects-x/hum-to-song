@@ -7,6 +7,8 @@ export const pitchClass = (midi: number) => ((Math.round(midi) % 12) + 12) % 12;
 
 export const midiToHz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
+export const hzToMidi = (hz: number) => 69 + 12 * Math.log2(hz / 440);
+
 export function prefersFlats(tonic: number, mode: 'major' | 'minor'): boolean {
   return (mode === 'major' ? FLAT_TONICS_MAJOR : FLAT_TONICS_MINOR).has(pitchClass(tonic));
 }

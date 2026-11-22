@@ -1,3 +1,5 @@
+import { detectPitch } from './pitchTrack';
+
 export type TRecordPlan = { bpm: number; bars: number; beatsPerBar: number };
 
 export type TRecordTiming = {
@@ -97,6 +99,22 @@ export function scheduleClicks(context: AudioContext, timing: TRecordTiming, cou
     oscillator.start(at);
     oscillator.stop(at + 0.08);
   }
+}
+
+export function pitchListener(context: AudioContext, stream: MediaStream) {
+  const source = context.createMediaStreamSource(stream);
+  const analyser = context.createAnalyser();
+  analyser.fftSize = 2048;
+  source.connect(analyser);
+  const frame = new Float32Array(analyser.fftSize);
+  return {
+    lag: analyser.fftSize / 2 / context.sampleRate,
+    read: () => {
+      analyser.getFloatTimeDomainData(frame);
+      return detectPitch(frame, context.sampleRate);
+    },
+    close: () => source.disconnect(),
+  };
 }
 
 export async function openMicrophone(): Promise<MediaStream> {

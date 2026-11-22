@@ -6,15 +6,18 @@ import {
   captureTake,
   keepsTake,
   openMicrophone,
+  pitchListener,
   recordingTiming,
   scheduleClicks,
   streamLatency,
 } from '@/lib/audio/recorder';
 import type { TRecordPlan, TRecordTiming } from '@/lib/audio/recorder';
+import { hzToMidi } from '@/lib/music/pitch';
 import type { TRecorderState } from '@/types/status';
-import type { TTake } from '@/types/take';
+import type { TPitchPoint, TTake } from '@/types/take';
 
 const IDLE: TRecorderState = { phase: 'idle', beat: 0, bar: 0, progress: 0 };
+const TRACE_EVERY = 0.05;
 
 function stateAt(now: number, timing: TRecordTiming, plan: TRecordPlan): TRecorderState {
   if (now < timing.startAt) {
@@ -34,6 +37,7 @@ function stateAt(now: number, timing: TRecordTiming, plan: TRecordPlan): TRecord
 
 export function useRecorder() {
   const [state, setState] = useState<TRecorderState>(IDLE);
+  const [trace, setTrace] = useState<TPitchPoint[]>([]);
   const stopRef = useRef<AbortController | null>(null);
   const frameRef = useRef(0);
 
@@ -46,19 +50,35 @@ export function useRecorder() {
     const controller = new AbortController();
     stopRef.current = controller;
     let stream: MediaStream | null = null;
+    let listener: ReturnType<typeof pitchListener> | null = null;
     try {
       await context.resume();
       setState({ ...IDLE, phase: 'asking' });
+      setTrace([]);
       stream = await openMicrophone();
       if (controller.signal.aborted) throw new DOMException('Recording stopped', 'AbortError');
       const timing = recordingTiming(context.currentTime, plan, streamLatency(context, stream));
       scheduleClicks(context, timing, plan.beatsPerBar);
+      const voice = pitchListener(context, stream);
+      listener = voice;
+      const points: TPitchPoint[] = [];
+      let shownAt = 0;
       const tick = () => {
         if (controller.signal.aborted) {
           if (keepsTake(context.currentTime, timing)) setState({ ...IDLE, phase: 'saving' });
           return;
         }
-        const next = stateAt(context.currentTime, timing, plan);
+        const now = context.currentTime;
+        const next = stateAt(now, timing, plan);
+        const beat = (now - voice.lag - timing.startAt - timing.latency) / timing.beat;
+        if (next.phase === 'recording' && beat >= 0) {
+          const hz = voice.read();
+          points.push({ beat, midi: hz ? hzToMidi(hz) : null });
+          if (now - shownAt >= TRACE_EVERY) {
+            shownAt = now;
+            setTrace(points.slice());
+          }
+        }
         setState((prev) =>
           prev.phase === next.phase &&
           prev.beat === next.beat &&
@@ -72,6 +92,7 @@ export function useRecorder() {
       tick();
       const captured = await captureTake(context, stream, timing, controller.signal);
       cancelAnimationFrame(frameRef.current);
+      setTrace(points.slice());
       setState({ ...IDLE, phase: 'saving' });
       const bars = barsHeard(captured.length, context.sampleRate, timing, plan);
       const samples = await resampleToModelRate(captured, context.sampleRate);
@@ -83,6 +104,7 @@ export function useRecorder() {
       };
     } finally {
       cancelAnimationFrame(frameRef.current);
+      listener?.close();
       stream?.getTracks().forEach((track) => track.stop());
       void context.close();
       stopRef.current = null;
@@ -98,5 +120,5 @@ export function useRecorder() {
     []
   );
 
-  return { state, record, stop };
+  return { state, trace, record, stop };
 }
