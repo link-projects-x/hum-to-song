@@ -4,7 +4,7 @@ A web app that turns a hummed melody into a short song. A small neural network i
 
 Everything runs in the browser. Audio is not uploaded anywhere.
 
-Demo: not deployed yet.
+Live demo: https://humtosong.vercel.app
 
 ## How it works
 
