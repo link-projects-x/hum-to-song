@@ -115,7 +115,7 @@ export function readRollTheme(element: Element): TRollTheme {
   };
 }
 
-export function pitchRange(data: TRollData): [number, number] {
+function pitchRange(data: TRollData): [number, number] {
   let low = Infinity;
   let high = -Infinity;
   for (const note of data.notes) {

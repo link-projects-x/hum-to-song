@@ -2,7 +2,7 @@ const METRIC_WEIGHTS = [1, 0.25, 0.5, 0.25];
 
 const near = (a: number, b: number) => Math.abs(a - b) < 1e-6;
 
-export function positionInBar(position: number, beatsPerBar: number): number {
+function positionInBar(position: number, beatsPerBar: number): number {
   return ((position % beatsPerBar) + beatsPerBar) % beatsPerBar;
 }
 

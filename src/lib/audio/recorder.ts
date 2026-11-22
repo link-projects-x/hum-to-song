@@ -1,4 +1,6 @@
-import { detectPitch } from './pitchTrack';
+import type { TRecorderState } from '@/types/status';
+
+import { detectPitch } from './livePitch';
 
 export type TRecordPlan = { bpm: number; bars: number; beatsPerBar: number };
 
@@ -44,7 +46,7 @@ registerProcessor('${PROCESSOR}', HumCapture);
 
 const registered = new WeakSet<BaseAudioContext>();
 
-export async function ensureCaptureWorklet(context: AudioContext): Promise<void> {
+async function ensureCaptureWorklet(context: AudioContext): Promise<void> {
   if (registered.has(context)) return;
   const url = URL.createObjectURL(new Blob([CAPTURE_WORKLET], { type: 'text/javascript' }));
   try {
@@ -61,6 +63,26 @@ export function recordingTiming(now: number, plan: TRecordPlan, latency: number)
   const startAt = countInAt + plan.beatsPerBar * beat;
   const endAt = startAt + plan.bars * plan.beatsPerBar * beat + latency + TAIL_SECONDS;
   return { beat, countInAt, startAt, endAt, latency };
+}
+
+export function recorderStateAt(
+  now: number,
+  timing: TRecordTiming,
+  plan: TRecordPlan
+): TRecorderState {
+  if (now < timing.startAt) {
+    const beat = Math.max(0, Math.floor((now - timing.countInAt) / timing.beat));
+    return { phase: 'countin', beat, bar: 0, progress: 0 };
+  }
+  const elapsed = now - timing.startAt;
+  const total = plan.bars * plan.beatsPerBar * timing.beat;
+  const beats = Math.floor(elapsed / timing.beat);
+  return {
+    phase: 'recording',
+    beat: beats % plan.beatsPerBar,
+    bar: Math.min(plan.bars - 1, Math.floor(beats / plan.beatsPerBar)),
+    progress: Math.min(1, elapsed / total),
+  };
 }
 
 export const keepsTake = (now: number, timing: TRecordTiming) =>

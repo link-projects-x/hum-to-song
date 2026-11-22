@@ -10,7 +10,7 @@ import type { TRandom } from './random';
 
 export type TRegister = 'low' | 'high';
 
-export const REGISTERS: Record<TRegister, [number, number]> = { low: [45, 57], high: [57, 69] };
+const REGISTERS: Record<TRegister, [number, number]> = { low: [45, 57], high: [57, 69] };
 
 export type TTakeSpec = {
   melody: string;
@@ -40,7 +40,7 @@ export type TTruth = {
   voice: THumVoice;
 };
 
-export function chooseTranspose(id: string, register: TRegister, random: TRandom): number {
+function chooseTranspose(id: string, register: TRegister, random: TRandom): number {
   const [low, high] = melodyRange(melodyById(id));
   const [regLow, regHigh] = REGISTERS[register];
   const fits: number[] = [];

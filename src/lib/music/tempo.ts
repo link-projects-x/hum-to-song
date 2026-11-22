@@ -12,7 +12,7 @@ export type TTempoOptions = {
   beatsPerBar: number;
 };
 
-export const DEFAULT_TEMPO: TTempoOptions = {
+const DEFAULT_TEMPO: TTempoOptions = {
   minBpm: 70,
   maxBpm: 140,
   bpmStep: 0.25,

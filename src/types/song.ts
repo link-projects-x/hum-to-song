@@ -1,4 +1,6 @@
-import type { TChordSpan, TGrid, TKeyEstimate, TMode, TNote } from './music';
+import type { TChordSpan, TGrid, TGridStep, TKeyEstimate, TMode, TNote } from './music';
+import type { TKnownGrid } from './take';
+import type { TRawNote } from './transcription';
 
 export type TStyleId = 'dance' | 'lofi' | 'ballad';
 
@@ -43,3 +45,21 @@ export type TSong = {
   spans: TChordSpan[];
   arrangement: TArrangement;
 };
+
+export type TSongSettings = {
+  step: TGridStep;
+  snap: boolean;
+  style: TStyleId;
+  lead: TLeadId;
+  alternative: number;
+  mode: TMode | null;
+};
+
+export type TSharedSong = {
+  notes: TRawNote[];
+  grid: TKnownGrid;
+  settings: TSongSettings;
+  tracks: Record<TTrackId, boolean>;
+};
+
+export type TExportKind = 'song' | 'melody' | 'wav';

@@ -13,7 +13,7 @@ export type TModelJson = {
   weightsManifest: { paths: string[]; weights: tf.io.WeightsManifestEntry[] }[];
 };
 
-export async function loadModel(json: TModelJson, weights: ArrayBuffer): Promise<tf.GraphModel> {
+async function loadModel(json: TModelJson, weights: ArrayBuffer): Promise<tf.GraphModel> {
   const artifacts: tf.io.ModelArtifacts = {
     format: json.format,
     generatedBy: json.generatedBy,

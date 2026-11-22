@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { detectPitch } from './pitchTrack';
+import { detectPitch } from './livePitch';
 
 const tone = (hz: number, rate: number, harmonics = 1, gain = 0.3, length = 2048) => {
   const out = new Float32Array(length);

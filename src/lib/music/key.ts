@@ -3,8 +3,8 @@ import type { TKey, TKeyEstimate, TMode } from '@/types/music';
 import { beatStrength } from './meter';
 import { pitchClass } from './pitch';
 
-export const MAJOR_PROFILE = [5, 2, 3.5, 2, 4.5, 4, 2, 4.5, 2, 3.5, 1.5, 4];
-export const MINOR_PROFILE = [5, 2, 3.5, 4.5, 2, 4, 2, 4.5, 3.5, 2, 1.5, 4];
+const MAJOR_PROFILE = [5, 2, 3.5, 2, 4.5, 4, 2, 4.5, 2, 3.5, 1.5, 4];
+const MINOR_PROFILE = [5, 2, 3.5, 4.5, 2, 4, 2, 4.5, 3.5, 2, 1.5, 4];
 
 export type TWeightedPitch = { midi: number; duration: number; start?: number };
 
@@ -17,7 +17,7 @@ export function pitchClassProfile(notes: TWeightedPitch[], beatsPerBar = 4): num
   return profile;
 }
 
-export function correlation(a: number[], b: number[]): number {
+function correlation(a: number[], b: number[]): number {
   const n = a.length;
   const meanA = a.reduce((sum, v) => sum + v, 0) / n;
   const meanB = b.reduce((sum, v) => sum + v, 0) / n;
@@ -35,7 +35,7 @@ export function correlation(a: number[], b: number[]): number {
   return den > 0 ? num / den : 0;
 }
 
-export function keyScores(profile: number[]): (TKey & { score: number })[] {
+function keyScores(profile: number[]): (TKey & { score: number })[] {
   const scores: (TKey & { score: number })[] = [];
   const modes: [TMode, number[]][] = [
     ['major', MAJOR_PROFILE],

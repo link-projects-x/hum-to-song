@@ -8,24 +8,24 @@ export const BEATS_PER_BAR = 4;
 export const MIN_BPM = 40;
 export const MAX_BPM = 240;
 export const MAX_BARS = 40;
-export const FALLBACK_BPM = 100;
+const FALLBACK_BPM = 100;
 
 export type TDownbeatWeights = { metric: number; first: number };
 
-export const DOWNBEAT_WEIGHTS: TDownbeatWeights = { metric: 1, first: 0.1 };
+const DOWNBEAT_WEIGHTS: TDownbeatWeights = { metric: 1, first: 0.1 };
 
-export function onsetsOf(notes: TRawNote[]) {
+function onsetsOf(notes: TRawNote[]) {
   return notes.map((note) => ({
     time: note.start,
     weight: Math.sqrt(Math.max(0.05, note.end - note.start)),
   }));
 }
 
-export function barsFor(notes: TRawNote[], bpm: number, offset: number): number {
+function barsFor(notes: TRawNote[], bpm: number, offset: number): number {
   return Math.min(MAX_BARS, barsSpanned(notes, { bpm, offset, beatsPerBar: BEATS_PER_BAR }));
 }
 
-export function downbeatScore(
+function downbeatScore(
   notes: TRawNote[],
   bpm: number,
   offset: number,

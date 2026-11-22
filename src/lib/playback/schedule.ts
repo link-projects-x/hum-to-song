@@ -7,7 +7,7 @@ import type { TBuses, TVoices } from './voices';
 
 export type THumAudio = { samples: Float32Array; rate: number; offset: number };
 
-export const TRACK_IDS: TTrackId[] = ['melody', 'chords', 'bass', 'drums', 'hum'];
+const TRACK_IDS: TTrackId[] = ['melody', 'chords', 'bass', 'drums', 'hum'];
 
 type TTimed<T> = T & { time: number };
 
@@ -20,7 +20,7 @@ export function createBuses(enabled: Record<TTrackId, boolean>, output: Tone.Inp
   return Object.fromEntries(entries) as TBuses;
 }
 
-export function humBuffer(hum: THumAudio): Tone.ToneAudioBuffer {
+function humBuffer(hum: THumAudio): Tone.ToneAudioBuffer {
   const audio = new AudioBuffer({
     length: hum.samples.length,
     numberOfChannels: 1,

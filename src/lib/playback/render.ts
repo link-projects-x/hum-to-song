@@ -37,7 +37,7 @@ export async function renderSongWav(
   return encodeWav(normalizePeak(Array.isArray(data) ? data : [data]), RENDER_RATE);
 }
 
-export function normalizePeak(channels: Float32Array[]): Float32Array[] {
+function normalizePeak(channels: Float32Array[]): Float32Array[] {
   let peak = 0;
   for (const channel of channels) {
     for (let i = 0; i < channel.length; i++) peak = Math.max(peak, Math.abs(channel[i]));

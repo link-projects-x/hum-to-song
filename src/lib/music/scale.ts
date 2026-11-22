@@ -5,7 +5,7 @@ import { pitchClass } from './pitch';
 const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11];
 const MINOR_STEPS = [0, 2, 3, 5, 7, 8, 10, 11];
 
-export function scalePitchClasses(key: TKey): Set<number> {
+function scalePitchClasses(key: TKey): Set<number> {
   const steps = key.mode === 'major' ? MAJOR_STEPS : MINOR_STEPS;
   return new Set(steps.map((step) => (key.tonic + step) % 12));
 }

@@ -120,7 +120,7 @@ function makeSlowNoise(random: TRandom, rate: number, cutoff: number) {
   return () => step() * scale;
 }
 
-export function performNotes(
+function performNotes(
   score: TScoreNote[],
   bpm: number,
   leadIn: number,

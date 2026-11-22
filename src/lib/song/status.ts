@@ -1,10 +1,35 @@
-import type { TNoteFinderStatus, TRecorderState, TStudioStatus } from '@/types/status';
+import type {
+  TNoteFinderStatus,
+  TRecorderPhase,
+  TRecorderState,
+  TStatusView,
+  TStudioStatus,
+} from '@/types/status';
+import type { TLiveTake, TPitchPoint } from '@/types/take';
 
-export type TStatusView = {
-  text: string;
-  progress: number | null;
-  tone: 'busy' | 'error' | 'live';
-};
+import { BEATS_PER_BAR } from './grid';
+
+const WORKING: TStudioStatus['phase'][] = ['opening', 'notes', 'chords'];
+const TAKING: TRecorderPhase[] = ['countin', 'recording', 'saving'];
+
+export const studioBusy = (recorder: TRecorderState, studio: TStudioStatus) =>
+  recorder.phase !== 'idle' || WORKING.includes(studio.phase);
+
+export function liveTake(
+  recorder: TRecorderState,
+  studio: TStudioStatus,
+  trace: TPitchPoint[],
+  bars: number,
+  fromMic: boolean
+): TLiveTake | null {
+  const taking = TAKING.includes(recorder.phase);
+  if (!taking && !(fromMic && WORKING.includes(studio.phase))) return null;
+  const position =
+    recorder.phase === 'recording'
+      ? Math.min(recorder.progress, 0.999) * bars * BEATS_PER_BAR
+      : null;
+  return { trace, bars, position };
+}
 
 const percent = (fraction: number) => `${Math.round(Math.max(0, Math.min(1, fraction)) * 100)}%`;
 

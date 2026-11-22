@@ -52,7 +52,7 @@ function swung(position: number, swing: number): number {
   return Math.abs(frac - 0.5) < 1e-6 ? beat + swing : position;
 }
 
-export function danceParts(spans: TChordSpan[], key: TKey, bars: number, beatsPerBar: number) {
+function danceParts(spans: TChordSpan[], key: TKey, bars: number, beatsPerBar: number) {
   const chords: TNote[] = [];
   const bass: TNote[] = [];
   const drums: TDrumHit[] = [];
@@ -74,7 +74,7 @@ export function danceParts(spans: TChordSpan[], key: TKey, bars: number, beatsPe
   return { chords, bass, drums };
 }
 
-export function lofiParts(
+function lofiParts(
   spans: TChordSpan[],
   key: TKey,
   bars: number,
@@ -110,7 +110,7 @@ export function lofiParts(
   return { chords, bass, drums };
 }
 
-export function balladParts(spans: TChordSpan[], key: TKey, bars: number, beatsPerBar: number) {
+function balladParts(spans: TChordSpan[], key: TKey, bars: number, beatsPerBar: number) {
   const chords: TNote[] = [];
   const bass: TNote[] = [];
   const drums: TDrumHit[] = [];

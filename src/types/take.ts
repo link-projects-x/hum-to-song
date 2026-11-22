@@ -10,3 +10,5 @@ export type TTake = {
 };
 
 export type TPitchPoint = { beat: number; midi: number | null };
+
+export type TLiveTake = { trace: TPitchPoint[]; bars: number; position: number | null };

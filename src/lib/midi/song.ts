@@ -12,7 +12,7 @@ const DRUM_LENGTH = 0.125;
 const toPartNotes = (notes: TNote[]): TMidiPartNote[] =>
   notes.map((n) => ({ midi: n.midi, start: n.start, beats: n.duration, velocity: n.velocity }));
 
-export function melodyPart(arrangement: TArrangement): TMidiPart {
+function melodyPart(arrangement: TArrangement): TMidiPart {
   return {
     name: 'Melody',
     channel: 0,
@@ -21,7 +21,7 @@ export function melodyPart(arrangement: TArrangement): TMidiPart {
   };
 }
 
-export function songParts(arrangement: TArrangement): TMidiPart[] {
+function songParts(arrangement: TArrangement): TMidiPart[] {
   return [
     melodyPart(arrangement),
     {

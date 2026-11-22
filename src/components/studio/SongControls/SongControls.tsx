@@ -1,8 +1,7 @@
 import { Button, Field, SegmentedControl, Select, ShuffleIcon, Toggle } from '@/components/ui';
 import { LEAD_OPTIONS, STYLE_OPTIONS } from '@/constants/styles';
-import type { TSongSettings } from '@/lib/song/build';
 import type { TGridStep, TMode } from '@/types/music';
-import type { TLeadId, TStyleId } from '@/types/song';
+import type { TLeadId, TSongSettings, TStyleId } from '@/types/song';
 
 import styles from './SongControls.module.scss';
 

@@ -1,17 +1,17 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 
+import type { THumAudio } from '@/lib/playback/schedule';
 import { buildSong } from '@/lib/song/build';
-import type { TSongSettings } from '@/lib/song/build';
 import { BEATS_PER_BAR, gridFor, withBpm } from '@/lib/song/grid';
-import type { TSharedSong } from '@/lib/song/share';
-import type { TSong } from '@/types/song';
+import { MODEL_RATE } from '@/lib/transcribe/frames';
+import type { TSharedSong, TSong, TSongSettings, TTrackId } from '@/types/song';
 import type { TStudioStatus } from '@/types/status';
 import type { TKnownGrid, TTake } from '@/types/take';
 import type { TTranscription } from '@/types/transcription';
 
 import { useNoteFinder } from './useNoteFinder';
 
-export const DEFAULT_SETTINGS: TSongSettings = {
+const DEFAULT_SETTINGS: TSongSettings = {
   step: 0.5,
   snap: true,
   style: 'dance',
@@ -76,11 +76,6 @@ export function useStudio() {
     [prepare, transcribe]
   );
 
-  const fail = useCallback((error: unknown) => {
-    runRef.current += 1;
-    setStatus({ phase: 'error', message: errorText(error) });
-  }, []);
-
   const openShared = useCallback((shared: TSharedSong) => {
     runRef.current += 1;
     setTake({
@@ -99,11 +94,6 @@ export function useStudio() {
     setGrid(shared.grid);
     setSettings(shared.settings);
     setStatus({ phase: 'ready' });
-  }, []);
-
-  const reset = useCallback(() => {
-    runRef.current += 1;
-    setStatus({ phase: 'idle' });
   }, []);
 
   const setBpm = useCallback(
@@ -127,19 +117,39 @@ export function useStudio() {
     );
   }, [transcription, grid, settings]);
 
+  const hum: THumAudio | null = useMemo(
+    () =>
+      take && grid && take.samples.length > 0
+        ? { samples: take.samples, rate: MODEL_RATE, offset: grid.offset }
+        : null,
+    [take, grid]
+  );
+
+  const shared = useCallback(
+    (tracks: Record<TTrackId, boolean>): TSharedSong | null =>
+      song && transcription && grid
+        ? {
+            notes: transcription.notes,
+            grid,
+            settings: { ...settings, alternative: song.progressionIndex },
+            tracks: { ...tracks, hum: false },
+          }
+        : null,
+    [song, transcription, grid, settings]
+  );
+
   return {
     take,
     transcription,
-    grid,
     settings,
     song,
+    hum,
     status,
     noteFinderStatus,
     prepare,
     process,
-    fail,
     openShared,
-    reset,
+    shared,
     setBpm,
     update,
   };

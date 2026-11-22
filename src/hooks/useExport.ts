@@ -4,11 +4,9 @@ import { downloadBytes, fileSlug } from '@/lib/download';
 import { melodyMidi, songMidi } from '@/lib/midi/song';
 import { loadRenderer } from '@/lib/playback/loader';
 import type { THumAudio } from '@/lib/playback/schedule';
-import type { TSong, TTrackId } from '@/types/song';
+import type { TExportKind, TSong, TTrackId } from '@/types/song';
 
 import { needsPiano } from './usePlayer';
-
-export type TExportKind = 'song' | 'melody' | 'wav';
 
 export function useExport(
   song: TSong | null,

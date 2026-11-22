@@ -7,7 +7,7 @@ export const secondsToBeats = (seconds: number, grid: Pick<TGrid, 'bpm' | 'offse
 export const beatsToSeconds = (beats: number, grid: Pick<TGrid, 'bpm' | 'offset'>) =>
   grid.offset + (beats * 60) / grid.bpm;
 
-export function velocityFor(amplitude: number): number {
+function velocityFor(amplitude: number): number {
   return Math.round(Math.max(56, Math.min(112, 40 + amplitude * 90)));
 }
 

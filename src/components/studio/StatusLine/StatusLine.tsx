@@ -1,5 +1,5 @@
 import { ProgressBar, cx } from '@/components/ui';
-import type { TStatusView } from '@/lib/song/status';
+import type { TStatusView } from '@/types/status';
 
 import styles from './StatusLine.module.scss';
 

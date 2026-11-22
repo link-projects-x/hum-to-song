@@ -150,7 +150,7 @@ function smoothSemitones(track: TPitchTrack, tuning: number, options: TDecodeOpt
 
 export type TOnsetCue = (frame: number, semitone: number) => number;
 
-export function modelOnsets(output: TModelOutput): TOnsetCue {
+function modelOnsets(output: TModelOutput): TOnsetCue {
   return (frame, semitone) => {
     const bin = semitone - MIDI_OFFSET;
     let best = 0;
@@ -272,7 +272,7 @@ function cleanUp(notes: TRawNote[], options: TDecodeOptions): TRawNote[] {
 
 export type TDecodeResult = { notes: TRawNote[]; tuning: number; track: TPitchTrack };
 
-export function notesFromTrack(
+function notesFromTrack(
   track: TPitchTrack,
   energyDb: Float32Array,
   onset: TOnsetCue,

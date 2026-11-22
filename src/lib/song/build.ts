@@ -4,18 +4,9 @@ import { detectKey } from '@/lib/music/key';
 import { changeMode } from '@/lib/music/mode';
 import { quantizeNotes } from '@/lib/music/quantize';
 import { snapToKey } from '@/lib/music/scale';
-import type { TGrid, TGridStep, TMode } from '@/types/music';
-import type { TLeadId, TSong, TStyleId } from '@/types/song';
+import type { TGrid } from '@/types/music';
+import type { TSong, TSongSettings } from '@/types/song';
 import type { TRawNote } from '@/types/transcription';
-
-export type TSongSettings = {
-  step: TGridStep;
-  snap: boolean;
-  style: TStyleId;
-  lead: TLeadId;
-  alternative: number;
-  mode: TMode | null;
-};
 
 export function buildSong(
   raw: TRawNote[],

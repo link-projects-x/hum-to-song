@@ -78,7 +78,7 @@ export type THarmonyOptions = {
   heldWeight: number;
 };
 
-export const DEFAULT_HARMONY: THarmonyOptions = {
+const DEFAULT_HARMONY: THarmonyOptions = {
   beatsPerBar: 4,
   bars: 4,
   alternatives: 8,
@@ -114,7 +114,7 @@ export function chordName(chord: TChord, key: TKey): string {
   return root;
 }
 
-export function toneFit(midi: number, chord: TChord, options: THarmonyOptions): number {
+function toneFit(midi: number, chord: TChord, options: THarmonyOptions): number {
   const pc = pitchClass(midi);
   const tones = chordPitchClasses(chord);
   if (pc === tones[0]) return options.rootTone;
@@ -235,7 +235,7 @@ export function harmonize(
   });
 }
 
-export function chordAt(spans: TChordSpan[], beat: number): TChord | null {
+function chordAt(spans: TChordSpan[], beat: number): TChord | null {
   const span = spans.find((s) => beat >= s.start - 1e-6 && beat < s.start + s.duration - 1e-6);
   return span ? span.chord : null;
 }

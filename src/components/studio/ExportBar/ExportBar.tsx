@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Button, CheckIcon, DownloadIcon, LinkIcon, Spinner, cx } from '@/components/ui';
-import type { TExportKind } from '@/hooks/useExport';
+import type { TExportKind } from '@/types/song';
 
 import styles from './ExportBar.module.scss';
 

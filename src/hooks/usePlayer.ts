@@ -7,7 +7,7 @@ import type { TArrangement, TTrackId } from '@/types/song';
 
 type TPlaybackModule = Awaited<ReturnType<typeof loadPlayer>>;
 
-export const DEFAULT_TRACKS: Record<TTrackId, boolean> = {
+const DEFAULT_TRACKS: Record<TTrackId, boolean> = {
   melody: true,
   chords: true,
   bass: true,

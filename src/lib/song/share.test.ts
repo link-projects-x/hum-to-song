@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import type { TSharedSong } from '@/types/song';
 import type { TRawNote } from '@/types/transcription';
 
 import { decodeSong, encodeSong, songFromHash, songLink } from './share';
-
-import type { TSharedSong } from './share';
 
 const notes: TRawNote[] = Array.from({ length: 30 }, (_, i) => ({
   start: 0.6 + i * 0.625,

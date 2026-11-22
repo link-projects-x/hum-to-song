@@ -141,14 +141,14 @@ export const MELODIES: readonly TMelody[] = [
 
 const LETTERS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
-export function parseNoteName(name: string): number {
+function parseNoteName(name: string): number {
   const match = /^([A-G])(#|b)?(-?\d)$/.exec(name);
   if (!match) throw new Error(`Bad note name "${name}"`);
   const accidental = match[2] === '#' ? 1 : match[2] === 'b' ? -1 : 0;
   return 12 * (Number(match[3]) + 1) + LETTERS[match[1]] + accidental;
 }
 
-export function parseScore(score: string): TMelodyEvent[] {
+function parseScore(score: string): TMelodyEvent[] {
   const events: TMelodyEvent[] = [];
   score.split('|').forEach((bar, index) => {
     let total = 0;

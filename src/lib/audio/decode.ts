@@ -1,6 +1,6 @@
 import { MODEL_RATE } from '@/lib/transcribe/frames';
 
-export function mixToMono(buffer: AudioBuffer): Float32Array<ArrayBuffer> {
+function mixToMono(buffer: AudioBuffer): Float32Array<ArrayBuffer> {
   const out = new Float32Array(buffer.length);
   for (let c = 0; c < buffer.numberOfChannels; c++) {
     const data = buffer.getChannelData(c);

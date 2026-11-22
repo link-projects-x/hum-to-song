@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { barsHeard, keepsTake, recordingTiming } from './recorder';
+import { barsHeard, keepsTake, recorderStateAt, recordingTiming } from './recorder';
 
 const plan = { bpm: 120, bars: 8, beatsPerBar: 4 };
 const timing = recordingTiming(10, plan, 0.1);
@@ -33,5 +33,32 @@ describe('barsHeard', () => {
 
   it('keeps at least one bar', () => {
     expect(barsHeard(stoppedAfter(0.6), rate, timing, plan)).toBe(1);
+  });
+});
+
+describe('recorderStateAt', () => {
+  it('counts in before the take', () => {
+    expect(recorderStateAt(timing.countInAt + 1.1, timing, plan)).toEqual({
+      phase: 'countin',
+      beat: 2,
+      bar: 0,
+      progress: 0,
+    });
+  });
+
+  it('tracks the bar, beat and progress while recording', () => {
+    expect(recorderStateAt(timing.startAt + 5.25, timing, plan)).toEqual({
+      phase: 'recording',
+      beat: 2,
+      bar: 2,
+      progress: 5.25 / 16,
+    });
+  });
+
+  it('stops at the last bar', () => {
+    expect(recorderStateAt(timing.startAt + 20, timing, plan)).toMatchObject({
+      bar: 7,
+      progress: 1,
+    });
   });
 });

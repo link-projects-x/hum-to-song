@@ -7,33 +7,18 @@ import {
   keepsTake,
   openMicrophone,
   pitchListener,
+  recorderStateAt,
   recordingTiming,
   scheduleClicks,
   streamLatency,
 } from '@/lib/audio/recorder';
-import type { TRecordPlan, TRecordTiming } from '@/lib/audio/recorder';
+import type { TRecordPlan } from '@/lib/audio/recorder';
 import { hzToMidi } from '@/lib/music/pitch';
 import type { TRecorderState } from '@/types/status';
 import type { TPitchPoint, TTake } from '@/types/take';
 
 const IDLE: TRecorderState = { phase: 'idle', beat: 0, bar: 0, progress: 0 };
 const TRACE_EVERY = 0.05;
-
-function stateAt(now: number, timing: TRecordTiming, plan: TRecordPlan): TRecorderState {
-  if (now < timing.startAt) {
-    const beat = Math.max(0, Math.floor((now - timing.countInAt) / timing.beat));
-    return { phase: 'countin', beat, bar: 0, progress: 0 };
-  }
-  const elapsed = now - timing.startAt;
-  const total = plan.bars * plan.beatsPerBar * timing.beat;
-  const beats = Math.floor(elapsed / timing.beat);
-  return {
-    phase: 'recording',
-    beat: beats % plan.beatsPerBar,
-    bar: Math.min(plan.bars - 1, Math.floor(beats / plan.beatsPerBar)),
-    progress: Math.min(1, elapsed / total),
-  };
-}
 
 export function useRecorder() {
   const [state, setState] = useState<TRecorderState>(IDLE);
@@ -69,7 +54,7 @@ export function useRecorder() {
           return;
         }
         const now = context.currentTime;
-        const next = stateAt(now, timing, plan);
+        const next = recorderStateAt(now, timing, plan);
         const beat = (now - voice.lag - timing.startAt - timing.latency) / timing.beat;
         if (next.phase === 'recording' && beat >= 0) {
           const hz = voice.read();

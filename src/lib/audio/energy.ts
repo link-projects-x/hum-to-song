@@ -1,9 +1,8 @@
-export const SILENCE_DB = -100;
+const SILENCE_DB = -100;
 
-export const toDb = (rms: number) =>
-  rms > 0 ? Math.max(SILENCE_DB, 20 * Math.log10(rms)) : SILENCE_DB;
+const toDb = (rms: number) => (rms > 0 ? Math.max(SILENCE_DB, 20 * Math.log10(rms)) : SILENCE_DB);
 
-export function rmsAt(samples: Float32Array, center: number, half: number): number {
+function rmsAt(samples: Float32Array, center: number, half: number): number {
   const from = Math.max(0, center - half);
   const to = Math.min(samples.length, center + half);
   if (to <= from) return 0;
@@ -26,7 +25,7 @@ export function energyAtTimes(
   return out;
 }
 
-export function percentile(values: ArrayLike<number>, fraction: number): number {
+function percentile(values: ArrayLike<number>, fraction: number): number {
   if (!values.length) return SILENCE_DB;
   const sorted = Array.from(values).sort((a, b) => a - b);
   const index = Math.min(sorted.length - 1, Math.max(0, Math.floor(fraction * sorted.length)));

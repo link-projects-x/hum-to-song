@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import type { TSongSettings } from '@/types/song';
 import type { TRawNote } from '@/types/transcription';
 
 import { buildSong } from './build';
-
-import type { TSongSettings } from './build';
 
 const settings: TSongSettings = {
   step: 0.5,

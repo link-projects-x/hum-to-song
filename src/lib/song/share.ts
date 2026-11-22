@@ -1,18 +1,9 @@
 import type { TGridStep, TMode } from '@/types/music';
-import type { TLeadId, TStyleId, TTrackId } from '@/types/song';
+import type { TLeadId, TSharedSong, TStyleId, TTrackId } from '@/types/song';
 import type { TKnownGrid } from '@/types/take';
 import type { TRawNote } from '@/types/transcription';
 
 import { BEATS_PER_BAR, MAX_BARS, MAX_BPM, MIN_BPM } from './grid';
-
-import type { TSongSettings } from './build';
-
-export type TSharedSong = {
-  notes: TRawNote[];
-  grid: TKnownGrid;
-  settings: TSongSettings;
-  tracks: Record<TTrackId, boolean>;
-};
 
 const VERSION = 1;
 const HEADER = 14;
@@ -138,6 +129,8 @@ export function songLink(href: string, song: TSharedSong): string {
   return `${href.split('#')[0]}${PREFIX}${encodeSong(song)}`;
 }
 
+export const isSongHash = (hash: string) => hash.startsWith(PREFIX);
+
 export function songFromHash(hash: string): TSharedSong | null {
-  return hash.startsWith(PREFIX) ? decodeSong(hash.slice(PREFIX.length)) : null;
+  return isSongHash(hash) ? decodeSong(hash.slice(PREFIX.length)) : null;
 }

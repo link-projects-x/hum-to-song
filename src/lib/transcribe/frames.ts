@@ -1,7 +1,7 @@
 export const MODEL_RATE = 22050;
 export const FFT_HOP = 256;
-export const WINDOW_HOP = 36164;
-export const FRAMES_PER_WINDOW = 142;
+const WINDOW_HOP = 36164;
+const FRAMES_PER_WINDOW = 142;
 export const NOTE_BINS = 88;
 export const CONTOUR_BINS = 264;
 export const MIDI_OFFSET = 21;

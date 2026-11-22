@@ -21,3 +21,9 @@ export type TStudioStatus =
   | { phase: 'chords' }
   | { phase: 'ready' }
   | { phase: 'error'; message: string };
+
+export type TStatusView = {
+  text: string;
+  progress: number | null;
+  tone: 'busy' | 'error' | 'live';
+};

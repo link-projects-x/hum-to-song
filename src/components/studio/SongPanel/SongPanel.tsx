@@ -1,8 +1,6 @@
 import { Panel } from '@/components/ui';
-import type { TExportKind } from '@/hooks/useExport';
-import type { TSongSettings } from '@/lib/song/build';
-import type { TSong, TTrackId } from '@/types/song';
-import type { TPitchPoint } from '@/types/take';
+import type { TExportKind, TSong, TSongSettings, TTrackId } from '@/types/song';
+import type { TLiveTake } from '@/types/take';
 import type { TContour } from '@/types/transcription';
 
 import { EmptySong } from '../EmptySong/EmptySong';
@@ -13,8 +11,6 @@ import { PianoRoll } from '../PianoRoll/PianoRoll';
 import { SongControls } from '../SongControls/SongControls';
 import { SongSummary } from '../SongSummary/SongSummary';
 import { Transport } from '../Transport/Transport';
-
-export type TLiveTake = { trace: TPitchPoint[]; bars: number; position: number | null };
 
 type TSongPanelProps = {
   song: TSong | null;
