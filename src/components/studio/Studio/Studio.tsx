@@ -86,7 +86,7 @@ export function Studio() {
               onBpm={setBpm}
               onBars={setBars}
               onRecord={() => start(() => recorder.record({ bpm, bars, beatsPerBar: 4 }))}
-              onStop={recorder.cancel}
+              onStop={recorder.stop}
             />
           )}
           {mode === 'upload' && (

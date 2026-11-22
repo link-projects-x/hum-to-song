@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { buildSong } from '@/lib/song/build';
 import type { TSongSettings } from '@/lib/song/build';
-import { BEATS_PER_BAR, estimateGrid, withBpm } from '@/lib/song/grid';
+import { BEATS_PER_BAR, gridFor, withBpm } from '@/lib/song/grid';
 import type { TSong } from '@/types/song';
 import type { TStudioStatus } from '@/types/status';
 import type { TKnownGrid, TTake } from '@/types/take';
@@ -61,11 +61,14 @@ export function useStudio() {
         if (!current()) return;
         setTake(next);
         setTranscription(result);
-        setGrid(next.grid ?? estimateGrid(result.notes));
+        setGrid(gridFor(next, result.notes));
         setSettings((value) => ({ ...value, alternative: 0 }));
         setStatus({ phase: 'ready' });
       } catch (error) {
-        if (current()) setStatus({ phase: 'error', message: errorText(error) });
+        if (!current()) return;
+        if (error instanceof DOMException && error.name === 'AbortError')
+          setStatus({ phase: 'idle' });
+        else setStatus({ phase: 'error', message: errorText(error) });
       }
     },
     [prepare, transcribe]

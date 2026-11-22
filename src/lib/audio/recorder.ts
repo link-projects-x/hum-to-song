@@ -61,6 +61,20 @@ export function recordingTiming(now: number, plan: TRecordPlan, latency: number)
   return { beat, countInAt, startAt, endAt, latency };
 }
 
+export const keepsTake = (now: number, timing: TRecordTiming) =>
+  now >= timing.startAt + timing.beat;
+
+export function barsHeard(
+  frames: number,
+  rate: number,
+  timing: TRecordTiming,
+  plan: TRecordPlan
+): number {
+  const heard = frames / rate - timing.latency - TAIL_SECONDS;
+  const bars = Math.ceil(heard / (plan.beatsPerBar * timing.beat) - 0.01);
+  return Math.max(1, Math.min(plan.bars, bars));
+}
+
 export function streamLatency(context: AudioContext, stream: MediaStream): number {
   const settings = stream.getAudioTracks()[0]?.getSettings() as MediaTrackSettings & {
     latency?: number;
@@ -109,7 +123,7 @@ export async function captureTake(
   context: AudioContext,
   stream: MediaStream,
   timing: TRecordTiming,
-  signal: AbortSignal
+  stop: AbortSignal
 ): Promise<Float32Array<ArrayBuffer>> {
   await ensureCaptureWorklet(context);
   const source = context.createMediaStreamSource(stream);
@@ -120,11 +134,12 @@ export async function captureTake(
   node.connect(silent).connect(context.destination);
   const rate = context.sampleRate;
   const startFrame = Math.round(timing.startAt * rate);
-  const endFrame = Math.round(timing.endAt * rate);
+  let endFrame = Math.round(timing.endAt * rate);
   const out = new Float32Array(Math.max(1, endFrame - startFrame));
 
   return new Promise((resolve, reject) => {
     let finished = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const finish = (error?: Error) => {
       if (finished) return;
       finished = true;
@@ -133,14 +148,26 @@ export async function captureTake(
       source.disconnect();
       node.disconnect();
       silent.disconnect();
-      signal.removeEventListener('abort', onAbort);
+      stop.removeEventListener('abort', onStop);
       if (error) reject(error);
-      else resolve(out);
+      else resolve(out.slice(0, Math.max(1, endFrame - startFrame)));
     };
-    const onAbort = () => finish(new DOMException('Recording stopped', 'AbortError'));
-    signal.addEventListener('abort', onAbort);
-    const waitMs = Math.max(0, (timing.endAt - context.currentTime) * 1000) + 1500;
-    const timer = setTimeout(() => finish(), waitMs);
+    const waitForEnd = () => {
+      clearTimeout(timer);
+      const waitMs = Math.max(0, (endFrame / rate - context.currentTime) * 1000) + 1500;
+      timer = setTimeout(() => finish(), waitMs);
+    };
+    const onStop = () => {
+      const now = context.currentTime;
+      if (!keepsTake(now, timing)) {
+        finish(new DOMException('Recording stopped', 'AbortError'));
+        return;
+      }
+      endFrame = Math.min(endFrame, Math.round((now + timing.latency + TAIL_SECONDS) * rate));
+      waitForEnd();
+    };
+    stop.addEventListener('abort', onStop);
+    waitForEnd();
     node.port.onmessage = (event: MessageEvent<{ frame: number; data: Float32Array }>) => {
       const { frame, data } = event.data;
       for (let i = 0; i < data.length; i++) {
@@ -149,5 +176,6 @@ export async function captureTake(
       }
       if (frame + data.length >= endFrame) finish();
     };
+    if (stop.aborted) onStop();
   });
 }

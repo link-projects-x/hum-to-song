@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { resampleToModelRate } from '@/lib/audio/decode';
 import {
+  barsHeard,
   captureTake,
+  keepsTake,
   openMicrophone,
   recordingTiming,
   scheduleClicks,
@@ -32,17 +34,17 @@ function stateAt(now: number, timing: TRecordTiming, plan: TRecordPlan): TRecord
 
 export function useRecorder() {
   const [state, setState] = useState<TRecorderState>(IDLE);
-  const abortRef = useRef<AbortController | null>(null);
+  const stopRef = useRef<AbortController | null>(null);
   const frameRef = useRef(0);
 
-  const cancel = useCallback(() => {
-    abortRef.current?.abort();
+  const stop = useCallback(() => {
+    stopRef.current?.abort();
   }, []);
 
   const record = useCallback(async (plan: TRecordPlan): Promise<TTake> => {
     const context = new AudioContext({ latencyHint: 'interactive' });
     const controller = new AbortController();
-    abortRef.current = controller;
+    stopRef.current = controller;
     let stream: MediaStream | null = null;
     try {
       await context.resume();
@@ -52,6 +54,10 @@ export function useRecorder() {
       const timing = recordingTiming(context.currentTime, plan, streamLatency(context, stream));
       scheduleClicks(context, timing, plan.beatsPerBar);
       const tick = () => {
+        if (controller.signal.aborted) {
+          if (keepsTake(context.currentTime, timing)) setState({ ...IDLE, phase: 'saving' });
+          return;
+        }
         const next = stateAt(context.currentTime, timing, plan);
         setState((prev) =>
           prev.phase === next.phase &&
@@ -67,29 +73,30 @@ export function useRecorder() {
       const captured = await captureTake(context, stream, timing, controller.signal);
       cancelAnimationFrame(frameRef.current);
       setState({ ...IDLE, phase: 'saving' });
+      const bars = barsHeard(captured.length, context.sampleRate, timing, plan);
       const samples = await resampleToModelRate(captured, context.sampleRate);
       return {
         source: 'mic',
         name: 'My hum',
         samples,
-        grid: { bpm: plan.bpm, offset: timing.latency, bars: plan.bars },
+        grid: { bpm: plan.bpm, offset: timing.latency, bars },
       };
     } finally {
       cancelAnimationFrame(frameRef.current);
       stream?.getTracks().forEach((track) => track.stop());
       void context.close();
-      abortRef.current = null;
+      stopRef.current = null;
       setState(IDLE);
     }
   }, []);
 
   useEffect(
     () => () => {
-      abortRef.current?.abort();
+      stopRef.current?.abort();
       cancelAnimationFrame(frameRef.current);
     },
     []
   );
 
-  return { state, record, cancel };
+  return { state, record, stop };
 }

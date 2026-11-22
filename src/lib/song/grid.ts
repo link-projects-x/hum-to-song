@@ -1,7 +1,7 @@
 import { metricWeight } from '@/lib/music/meter';
-import { barsSpanned, quantizeNotes } from '@/lib/music/quantize';
+import { barsSpanned, quantizeNotes, secondsToBeats } from '@/lib/music/quantize';
 import { barStarts, estimateBeat } from '@/lib/music/tempo';
-import type { TKnownGrid } from '@/types/take';
+import type { TKnownGrid, TTake } from '@/types/take';
 import type { TRawNote } from '@/types/transcription';
 
 export const BEATS_PER_BAR = 4;
@@ -63,4 +63,17 @@ export function estimateGrid(
 export function withBpm(notes: TRawNote[], grid: TKnownGrid, bpm: number): TKnownGrid {
   const clamped = Math.max(MIN_BPM, Math.min(MAX_BPM, Math.round(bpm * 10) / 10));
   return { bpm: clamped, offset: grid.offset, bars: barsFor(notes, clamped, grid.offset) };
+}
+
+export function fitBars(notes: TRawNote[], grid: TKnownGrid): TKnownGrid {
+  if (!notes.length) return grid;
+  const last = Math.max(...notes.map((note) => note.start));
+  const beat = Math.round(secondsToBeats(last, grid) * 2) / 2;
+  const bars = Math.floor(beat / BEATS_PER_BAR) + 1;
+  return { ...grid, bars: Math.max(1, Math.min(grid.bars, bars)) };
+}
+
+export function gridFor(take: TTake, notes: TRawNote[]): TKnownGrid {
+  if (!take.grid) return estimateGrid(notes);
+  return take.source === 'mic' ? fitBars(notes, take.grid) : take.grid;
 }

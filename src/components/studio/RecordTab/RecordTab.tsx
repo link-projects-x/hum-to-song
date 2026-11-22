@@ -66,7 +66,8 @@ export function RecordTab({
         </div>
       </div>
       <p className={styles.hint}>
-        You hear one bar of clicks, then hum. Recording stops by itself after {bars} bars.
+        You hear one bar of clicks, then hum. Press Stop when you’re done, or it stops by itself
+        after {bars} bars.
       </p>
       <div className={styles.actions}>
         {active ? (
