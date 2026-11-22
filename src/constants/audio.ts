@@ -1,5 +1,7 @@
 export const MODEL_BASE_URL = '/model/basic-pitch/';
 export const MODEL_JSON = 'model.json';
+export const WASM_BASE_URL = '/tfjs/';
+export const MODEL_BACKENDS = ['webgpu', 'wasm', 'webgl', 'cpu'];
 
 export const PIANO_BASE_URL = '/samples/piano/';
 export const PIANO_SAMPLES: Record<string, string> = {

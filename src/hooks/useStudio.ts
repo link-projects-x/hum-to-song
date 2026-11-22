@@ -24,7 +24,7 @@ const errorText = (error: unknown) =>
   error instanceof Error && error.message ? error.message : 'Something went wrong. Try again.';
 
 export function useStudio() {
-  const { transcribe, status: noteFinderStatus } = useNoteFinder();
+  const { load, transcribe, status: noteFinderStatus } = useNoteFinder();
   const [take, setTake] = useState<TTake | null>(null);
   const [transcription, setTranscription] = useState<TTranscription | null>(null);
   const [grid, setGrid] = useState<TKnownGrid | null>(null);
@@ -32,8 +32,13 @@ export function useStudio() {
   const [status, setStatus] = useState<TStudioStatus>({ phase: 'idle' });
   const runRef = useRef(0);
 
+  const prepare = useCallback(() => {
+    load().catch(() => undefined);
+  }, [load]);
+
   const process = useCallback(
     async (loadTake: () => Promise<TTake>) => {
+      prepare();
       runRef.current += 1;
       const run = runRef.current;
       const current = () => run === runRef.current;
@@ -63,7 +68,7 @@ export function useStudio() {
         if (current()) setStatus({ phase: 'error', message: errorText(error) });
       }
     },
-    [transcribe]
+    [prepare, transcribe]
   );
 
   const fail = useCallback((error: unknown) => {
@@ -105,6 +110,7 @@ export function useStudio() {
     song,
     status,
     noteFinderStatus,
+    prepare,
     process,
     fail,
     reset,

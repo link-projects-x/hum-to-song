@@ -3,7 +3,7 @@ import * as tf from '@tensorflow/tfjs';
 
 import type { TModelOutput } from '@/types/transcription';
 
-import { CONTOUR_BINS, NOTE_BINS } from './frames';
+import { CONTOUR_BINS, MODEL_RATE, NOTE_BINS } from './frames';
 
 export type TModelJson = {
   format?: string;
@@ -25,16 +25,19 @@ export async function loadModel(json: TModelJson, weights: ArrayBuffer): Promise
   return tf.loadGraphModel(tf.io.fromMemory(artifacts));
 }
 
+async function tryBackend(name: string): Promise<boolean> {
+  try {
+    if (!(await tf.setBackend(name))) return false;
+    await tf.ready();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function pickBackend(preferred: string[]): Promise<string> {
   for (const name of preferred) {
-    try {
-      if (await tf.setBackend(name)) {
-        await tf.ready();
-        return tf.getBackend();
-      }
-    } catch {
-      continue;
-    }
+    if (await tryBackend(name)) return tf.getBackend();
   }
   await tf.ready();
   return tf.getBackend();
@@ -75,4 +78,27 @@ export async function runModel(
     contours: flatten(contours, CONTOUR_BINS),
     frameCount: frames.length,
   };
+}
+
+export type TStartedModel = { backend: string; model: tf.GraphModel };
+
+export async function startModel(
+  json: TModelJson,
+  weights: ArrayBuffer,
+  backends: string[]
+): Promise<TStartedModel> {
+  let failure: unknown = new Error('Could not start the note finder.');
+  for (const backend of backends) {
+    if (!(await tryBackend(backend))) continue;
+    let model: tf.GraphModel | null = null;
+    try {
+      model = await loadModel(json, weights);
+      await runModel(model, new Float32Array(MODEL_RATE), () => undefined);
+      return { backend, model };
+    } catch (error) {
+      model?.dispose();
+      failure = error;
+    }
+  }
+  throw failure;
 }

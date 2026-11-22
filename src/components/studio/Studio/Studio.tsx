@@ -58,6 +58,11 @@ export function Studio() {
     void studio.process(load);
   };
 
+  const choose = (next: TInputMode) => {
+    setMode(next);
+    if (next !== 'record') studio.prepare();
+  };
+
   const view = statusView(studio.status, studio.noteFinderStatus, recorder.state, bars);
 
   return (
@@ -70,7 +75,7 @@ export function Studio() {
             options={MODES}
             value={mode}
             disabled={busy}
-            onChange={setMode}
+            onChange={choose}
           />
           {mode === 'record' && (
             <RecordTab

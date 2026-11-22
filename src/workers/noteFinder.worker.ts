@@ -1,11 +1,15 @@
-import { MODEL_BASE_URL, MODEL_JSON } from '@/constants/audio';
-import { MODEL_RATE } from '@/lib/transcribe/frames';
-import { loadModel, pickBackend, runModel } from '@/lib/transcribe/model';
+import '@tensorflow/tfjs-backend-webgpu';
+import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm';
+
+import { MODEL_BACKENDS, MODEL_BASE_URL, MODEL_JSON, WASM_BASE_URL } from '@/constants/audio';
+import { pickBackend, runModel, startModel } from '@/lib/transcribe/model';
 import type { TModelJson } from '@/lib/transcribe/model';
 import { transcribe } from '@/lib/transcribe/transcribe';
 import type { TNoteFinderRequest, TNoteFinderResponse } from '@/types/worker';
 
 import type { GraphModel } from '@tensorflow/tfjs';
+
+setWasmPaths(new URL(WASM_BASE_URL, self.location.origin).toString());
 
 let model: Promise<GraphModel> | null = null;
 
@@ -52,7 +56,7 @@ async function prepare(origin: string): Promise<GraphModel> {
   const started = performance.now();
   const base = new URL(MODEL_BASE_URL, origin).toString();
   const jsonUrl = `${base}${MODEL_JSON}`;
-  const backend = pickBackend(['webgl', 'cpu']);
+  const backend = pickBackend(MODEL_BACKENDS);
   const jsonSize = await sizeOf(jsonUrl);
   const progress: TDownload = { loaded: 0, total: jsonSize };
   const report = () =>
@@ -74,16 +78,15 @@ async function prepare(origin: string): Promise<GraphModel> {
     offset += part.byteLength;
   }
   post({ type: 'warming' });
-  const name = await backend;
-  const loaded = await loadModel(json, weights.buffer);
-  await runModel(loaded, new Float32Array(MODEL_RATE), () => undefined);
+  const first = MODEL_BACKENDS.indexOf(await backend);
+  const ready = await startModel(json, weights.buffer, MODEL_BACKENDS.slice(first));
   post({
     type: 'ready',
-    backend: name,
+    backend: ready.backend,
     bytes: progress.loaded,
     loadMs: performance.now() - started,
   });
-  return loaded;
+  return ready.model;
 }
 
 function ensureModel(origin: string): Promise<GraphModel> {

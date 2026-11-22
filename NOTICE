@@ -2,7 +2,8 @@ Hum to Song
 Copyright (c) 2026 link-projects-x
 
 The source code is released under the MIT License (see LICENSE).
-This repository also contains third-party material under its own terms:
+This repository and the site built from it also contain third-party material
+under its own terms:
 
 Basic Pitch model
   Author:  Spotify AB
@@ -11,6 +12,31 @@ Basic Pitch model
            https://github.com/spotify/basic-pitch-ts
   Files:   public/model/basic-pitch/model.json
            public/model/basic-pitch/group1-shard1of1.bin
+  Changes: none
+
+TensorFlow.js WebAssembly backend
+  Author:  Google LLC
+  License: Apache License, Version 2.0 (full text at the end of this file)
+  Source:  npm package @tensorflow/tfjs-backend-wasm 4.22.0,
+           https://github.com/tensorflow/tfjs
+  Files:   public/tfjs/tfjs-backend-wasm.wasm
+           public/tfjs/tfjs-backend-wasm-simd.wasm
+           public/tfjs/tfjs-backend-wasm-threaded-simd.wasm
+           scripts/copy-wasm.ts copies them from node_modules when
+           npm run dev or npm run build starts; they are not stored in the
+           repository. The package's JavaScript is bundled into the note
+           finder worker. The binaries include XNNPACK
+           (https://github.com/google/XNNPACK, BSD 3-Clause License, full
+           text at the end of this file).
+  Changes: none
+
+TensorFlow.js WebGPU backend
+  Author:  Google LLC
+  License: Apache License, Version 2.0 (full text at the end of this file)
+  Source:  npm package @tensorflow/tfjs-backend-webgpu 4.22.0,
+           https://github.com/tensorflow/tfjs
+  Files:   none in the repository; the package's JavaScript is bundled into
+           the note finder worker
   Changes: none
 
 Salamander Grand Piano V3
@@ -234,3 +260,38 @@ Apache License, Version 2.0, as distributed with @spotify/basic-pitch:
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+--------------------------------------------------------------------------------
+BSD 3-Clause License, as distributed with XNNPACK:
+
+BSD License
+
+For XNNPACK software
+
+Copyright (c) Facebook, Inc. and its affiliates. All rights reserved.
+Copyright 2019 Google LLC
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+ * Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+ * Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+ * Neither the name Facebook nor the names of its contributors may be used to
+   endorse or promote products derived from this software without specific
+   prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
